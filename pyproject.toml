@@ -1,0 +1,7 @@
+[project]
+name = "SoloSprintForConfluence"
+version = "0.1.0"
+description = "A personal task management tool using Confluence databases with relative estimation, cycles, and velocity tracking."
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = []
