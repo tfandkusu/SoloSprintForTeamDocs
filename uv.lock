@@ -50,9 +50,9 @@ wheels = [
 ]
 
 [[package]]
-name = "solosprintforconfluence"
+name = "solosprintforteamdocs"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 
 [package.dev-dependencies]
 dev = [

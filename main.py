@@ -1,6 +1,4 @@
-def main() -> None:
-    print("Hello, World!")
-
+from ss4d.cli import main
 
 if __name__ == "__main__":
     main()

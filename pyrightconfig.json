@@ -3,6 +3,6 @@
   "pythonVersion": "3.14",
   "venvPath": ".",
   "venv": ".venv",
-  "include": ["main.py"],
+  "include": ["main.py", "src"],
   "exclude": [".venv", "**/__pycache__", ".ruff_cache", ".pytest_cache", "dist", "build"]
 }
