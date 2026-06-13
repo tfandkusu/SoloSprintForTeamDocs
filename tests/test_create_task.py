@@ -88,6 +88,7 @@ class CreateTaskTest(TestCase):
                     token="token",
                     page="123",
                     number=1,
+                    email="user@example.com",
                 ),
             )
             self.assertEqual(client.page_id, "123")
@@ -125,6 +126,7 @@ def _write_config(directory: Path, *, number: int) -> Path:
         'url = "https://example.atlassian.net/wiki"\n'
         'token = "token"\n'
         'page = "123"\n'
+        'email = "user@example.com"\n'
         f"number = {number}\n",
         encoding="utf-8",
     )

@@ -78,7 +78,12 @@ def _create_confluence_client(config: Config) -> ConfluenceClient:
     confluence = getattr(confluence_module, "Confluence")
     return cast(
         ConfluenceClient,
-        confluence(url=config.url, token=config.token, cloud=True),
+        confluence(
+            url=config.url,
+            username=config.email,
+            password=config.token,
+            cloud=True,
+        ),
     )
 
 

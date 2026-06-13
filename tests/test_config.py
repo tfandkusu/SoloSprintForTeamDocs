@@ -49,6 +49,61 @@ class ConfigTest(TestCase):
             ):
                 load_config(config_path)
 
+    def test_email_is_loaded(self) -> None:
+        """Load the Atlassian account email."""
+
+        with TemporaryDirectory() as directory:
+            config_path = Path(directory) / ".ss4d.toml"
+            config_path.write_text(
+                'url = "https://example.atlassian.net/wiki"\n'
+                'token = "token"\n'
+                'page = "123"\n'
+                "number = 1\n"
+                'email = "user@example.com"\n',
+                encoding="utf-8",
+            )
+
+            self.assertEqual(load_config(config_path).email, "user@example.com")
+
+    def test_missing_email_is_rejected(self) -> None:
+        """Reject configuration that omits the Atlassian account email."""
+
+        with TemporaryDirectory() as directory:
+            config_path = Path(directory) / ".ss4d.toml"
+            config_path.write_text(
+                'url = "https://example.atlassian.net/wiki"\n'
+                'token = "token"\n'
+                'page = "123"\n'
+                "number = 1\n",
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(
+                ConfigError,
+                "Config field 'email' must be a non-empty string.",
+            ):
+                load_config(config_path)
+
+    def test_empty_email_is_rejected(self) -> None:
+        """Reject email when it is blank."""
+
+        with TemporaryDirectory() as directory:
+            config_path = Path(directory) / ".ss4d.toml"
+            config_path.write_text(
+                'url = "https://example.atlassian.net/wiki"\n'
+                'token = "token"\n'
+                'page = "123"\n'
+                "number = 1\n"
+                'email = ""\n',
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(
+                ConfigError,
+                "Config field 'email' must be a non-empty string.",
+            ):
+                load_config(config_path)
+
     def test_increment_number_updates_config_file(self) -> None:
         """Increment the stored task number in the config file."""
 
@@ -58,6 +113,7 @@ class ConfigTest(TestCase):
                 'url = "https://example.atlassian.net/wiki"\n'
                 'token = "token"\n'
                 'page = "123"\n'
+                'email = "user@example.com"\n'
                 "number = 1\n",
                 encoding="utf-8",
             )

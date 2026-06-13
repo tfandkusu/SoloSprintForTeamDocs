@@ -22,6 +22,7 @@ class Config:
     token: str
     page: str
     number: int
+    email: str
 
 
 def load_config(path: Path = CONFIG_PATH) -> Config:
@@ -37,8 +38,9 @@ def load_config(path: Path = CONFIG_PATH) -> Config:
     token = _require_string(raw_config, "token")
     page = _require_string(raw_config, "page")
     number = _require_int(raw_config, "number")
+    email = _require_string(raw_config, "email")
 
-    return Config(url=url, token=token, page=page, number=number)
+    return Config(url=url, token=token, page=page, number=number, email=email)
 
 
 def increment_number(path: Path = CONFIG_PATH) -> None:
