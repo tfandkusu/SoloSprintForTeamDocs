@@ -8,6 +8,11 @@ from ss4d.process.add_task import create_task
 app = typer.Typer(no_args_is_help=True)
 
 
+@app.callback()
+def callback() -> None:
+    """SoloSprintForTeamDocs command-line tool."""
+
+
 @app.command()
 def create(title: str) -> None:
     """Create a task heading in Confluence."""
