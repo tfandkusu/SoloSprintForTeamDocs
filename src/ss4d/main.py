@@ -3,7 +3,7 @@
 import typer
 
 from ss4d.config import ConfigError
-from ss4d.process.add_task import create_task
+from ss4d.process.create_task import create_task
 
 app = typer.Typer(no_args_is_help=True)
 

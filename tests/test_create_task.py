@@ -4,12 +4,12 @@ from typing import Any
 from unittest import TestCase
 
 from ss4d.config import Config
-from ss4d.process.add_task import create_task, format_task_heading
+from ss4d.process.create_task import create_task, format_task_heading
 
 
 class FakeConfluenceClient:
     def __init__(self, *, should_fail: bool = False) -> None:
-        """Create a fake Confluence client for add-task tests."""
+        """Create a fake Confluence client for create-task tests."""
 
         self.should_fail = should_fail
         self.page_id: str | None = None
@@ -50,7 +50,7 @@ class FakeConfluenceClient:
         return object()
 
 
-class AddTaskTest(TestCase):
+class CreateTaskTest(TestCase):
     def test_format_task_heading_uses_default_points_without_spaces(self) -> None:
         """Format task headings with default story points and escaped title."""
 
