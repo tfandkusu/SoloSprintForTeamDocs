@@ -18,7 +18,7 @@ def create(title: str) -> None:
     """Create a task heading in Confluence."""
 
     try:
-        heading = create_task(title)
+        task_number = create_task(title)
     except ConfigError as error:
         typer.echo(str(error), err=True)
         raise typer.Exit(code=1) from error
@@ -26,7 +26,7 @@ def create(title: str) -> None:
         typer.echo(f"Failed to create task: {error}", err=True)
         raise typer.Exit(code=1) from error
 
-    typer.echo(heading)
+    typer.echo(f"Created task #{task_number}")
 
 
 def main() -> None:

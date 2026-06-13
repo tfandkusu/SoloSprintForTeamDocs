@@ -79,16 +79,13 @@ class CreateTaskTest(TestCase):
                 seen_config = config
                 return client
 
-            heading = create_task(
+            task_number = create_task(
                 "CI setup",
                 config_path=config_path,
                 client_factory=client_factory,
             )
 
-            self.assertIn("#1[1]CI setup", heading)
-            self.assertIn("<time datetime=", heading)
-            self.assertIn('<ac:parameter ac:name="colour">Grey</ac:parameter>', heading)
-            self.assertIn('<ac:parameter ac:name="title">TODO</ac:parameter>', heading)
+            self.assertEqual(task_number, 1)
             self.assertEqual(
                 seen_config,
                 Config(
@@ -103,7 +100,12 @@ class CreateTaskTest(TestCase):
             self.assertEqual(client.updated_title, "Sprint page")
             self.assertEqual(
                 client.updated_body,
-                f"<p>Existing</p>{heading}",
+                "<p>Existing</p><h1>#1[1]CI setup "
+                f'<time datetime="{date.today().isoformat()}" /> '
+                '<ac:structured-macro ac:name="status" ac:schema-version="1">'
+                '<ac:parameter ac:name="colour">Grey</ac:parameter>'
+                '<ac:parameter ac:name="title">TODO</ac:parameter>'
+                "</ac:structured-macro></h1>",
             )
             self.assertEqual(client.representation, "storage")
             self.assertFalse(client.minor_edit)

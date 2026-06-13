@@ -40,14 +40,15 @@ def create_task(
     *,
     config_path: Path = CONFIG_PATH,
     client_factory: ConfluenceClientFactory | None = None,
-) -> str:
-    """Append a task heading to Confluence and increment the task number."""
+) -> int:
+    """Append a task heading to Confluence and return the created task number."""
 
     if client_factory is None:
         client_factory = _create_confluence_client
 
     config = load_config(config_path)
-    heading = format_task_heading(config.number, title)
+    task_number = config.number
+    heading = format_task_heading(task_number, title)
 
     client = client_factory(config)
     page = client.get_page_by_id(
@@ -63,7 +64,7 @@ def create_task(
     )
 
     increment_number(config_path)
-    return heading
+    return task_number
 
 
 def format_task_heading(
