@@ -7,10 +7,14 @@ from ss4d.config import ConfigError, increment_number, load_config
 
 class ConfigTest(TestCase):
     def test_missing_config_file_is_rejected(self) -> None:
+        """Reject loading configuration when the file does not exist."""
+
         with self.assertRaisesRegex(ConfigError, "Config file not found"):
             load_config(Path("/missing/.ss4d.toml"))
 
     def test_missing_required_field_is_rejected(self) -> None:
+        """Reject configuration that omits a required field."""
+
         with TemporaryDirectory() as directory:
             config_path = Path(directory) / ".ss4d.toml"
             config_path.write_text(
@@ -27,6 +31,8 @@ class ConfigTest(TestCase):
                 load_config(config_path)
 
     def test_non_integer_number_is_rejected(self) -> None:
+        """Reject configuration whose task number is not an integer."""
+
         with TemporaryDirectory() as directory:
             config_path = Path(directory) / ".ss4d.toml"
             config_path.write_text(
@@ -44,6 +50,8 @@ class ConfigTest(TestCase):
                 load_config(config_path)
 
     def test_increment_number_updates_config_file(self) -> None:
+        """Increment the stored task number in the config file."""
+
         with TemporaryDirectory() as directory:
             config_path = Path(directory) / ".ss4d.toml"
             config_path.write_text(

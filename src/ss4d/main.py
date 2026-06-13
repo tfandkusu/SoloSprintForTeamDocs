@@ -30,4 +30,6 @@ def create(title: str) -> None:
 
 
 def main() -> None:
+    """Run the Typer application."""
+
     app()

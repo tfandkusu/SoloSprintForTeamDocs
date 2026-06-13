@@ -9,6 +9,8 @@ from ss4d.process.add_task import create_task, format_task_heading
 
 class FakeConfluenceClient:
     def __init__(self, *, should_fail: bool = False) -> None:
+        """Create a fake Confluence client for add-task tests."""
+
         self.should_fail = should_fail
         self.page_id: str | None = None
         self.updated_title: str | None = None
@@ -17,6 +19,8 @@ class FakeConfluenceClient:
         self.minor_edit: bool | None = None
 
     def get_page_by_id(self, page_id: str, expand: str) -> dict[str, Any]:
+        """Record the fetch request and return a stored page response."""
+
         self.page_id = page_id
         self.expand = expand
         return {
@@ -33,6 +37,8 @@ class FakeConfluenceClient:
         representation: str,
         minor_edit: bool,
     ) -> object:
+        """Record the update request or raise the configured failure."""
+
         if self.should_fail:
             raise RuntimeError("Confluence update failed")
 
@@ -46,18 +52,24 @@ class FakeConfluenceClient:
 
 class AddTaskTest(TestCase):
     def test_format_task_heading_uses_default_points_without_spaces(self) -> None:
+        """Format task headings with default story points and escaped title."""
+
         self.assertEqual(
             format_task_heading(1, "CI & deploy"),
             "<h1>#1[1]CI &amp; deploy</h1>",
         )
 
     def test_create_task_updates_confluence_and_increments_number(self) -> None:
+        """Update Confluence and increment the task number after success."""
+
         with TemporaryDirectory() as directory:
             config_path = _write_config(Path(directory), number=1)
             client = FakeConfluenceClient()
             seen_config: Config | None = None
 
             def client_factory(config: Config) -> FakeConfluenceClient:
+                """Capture the config and return the fake client."""
+
                 nonlocal seen_config
                 seen_config = config
                 return client
@@ -89,6 +101,8 @@ class AddTaskTest(TestCase):
             self.assertIn("number = 2", config_path.read_text(encoding="utf-8"))
 
     def test_failed_confluence_update_does_not_increment_number(self) -> None:
+        """Keep the task number unchanged when the Confluence update fails."""
+
         with TemporaryDirectory() as directory:
             config_path = _write_config(Path(directory), number=1)
             client = FakeConfluenceClient(should_fail=True)
@@ -104,6 +118,8 @@ class AddTaskTest(TestCase):
 
 
 def _write_config(directory: Path, *, number: int) -> Path:
+    """Write a temporary ss4d config file for tests."""
+
     config_path = directory / ".ss4d.toml"
     config_path.write_text(
         'url = "https://example.atlassian.net/wiki"\n'

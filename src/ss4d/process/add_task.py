@@ -72,6 +72,8 @@ def format_task_heading(number: int, title: str) -> str:
 
 
 def _create_confluence_client(config: Config) -> ConfluenceClient:
+    """Create an authenticated Confluence client from configuration."""
+
     confluence_module = import_module("atlassian")
     confluence = getattr(confluence_module, "Confluence")
     return cast(
@@ -81,11 +83,15 @@ def _create_confluence_client(config: Config) -> ConfluenceClient:
 
 
 def _append_storage_body(page: Mapping[str, object], heading: str) -> str:
+    """Append a task heading to the page storage body."""
+
     current_body = _extract_storage_body(page)
     return f"{current_body}{heading}"
 
 
 def _extract_page_title(page: Mapping[str, object]) -> str:
+    """Extract the Confluence page title from an API response."""
+
     title = page.get("title")
     if not isinstance(title, str) or title == "":
         raise RuntimeError("Confluence page response did not include a title.")
@@ -93,6 +99,8 @@ def _extract_page_title(page: Mapping[str, object]) -> str:
 
 
 def _extract_storage_body(page: Mapping[str, object]) -> str:
+    """Extract the storage-format body from an API response."""
+
     body = page.get("body")
     if not isinstance(body, Mapping):
         return ""

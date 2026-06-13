@@ -55,10 +55,14 @@ def increment_number(path: Path = CONFIG_PATH) -> None:
 
 
 def _get_root_table(document: TOMLDocument) -> dict[str, object]:
+    """Return the root TOML document as a mutable mapping."""
+
     return cast(dict[str, object], document)
 
 
 def _require_string(raw_config: dict[str, object], field_name: str) -> str:
+    """Return a required non-empty string config field."""
+
     value = raw_config.get(field_name)
     if not isinstance(value, str) or value == "":
         raise ConfigError(f"Config field '{field_name}' must be a non-empty string.")
@@ -66,6 +70,8 @@ def _require_string(raw_config: dict[str, object], field_name: str) -> str:
 
 
 def _require_int(raw_config: dict[str, object], field_name: str) -> int:
+    """Return a required integer config field."""
+
     value = raw_config.get(field_name)
     if not isinstance(value, int):
         raise ConfigError(f"Config field '{field_name}' must be an integer.")
