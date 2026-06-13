@@ -12,7 +12,8 @@ class MainTest(TestCase):
 
         runner = CliRunner()
 
-        with patch("ss4d.main.create_task", return_value=7):
+        with patch("ss4d.main.Container") as container_class:
+            container_class.return_value.create_task.return_value = 7
             result = runner.invoke(app, ["create", "CI setup"])
 
         self.assertEqual(result.exit_code, 0)

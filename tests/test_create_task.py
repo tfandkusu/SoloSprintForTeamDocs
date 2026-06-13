@@ -1,54 +1,24 @@
 from datetime import date
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Any
 from unittest import TestCase
 
-from ss4d.config import Config
 from ss4d.process.create_task import create_task, format_task_heading
 
 
-class FakeConfluenceClient:
+class FakeDocumentManager:
     def __init__(self, *, should_fail: bool = False) -> None:
-        """Create a fake Confluence client for create-task tests."""
+        """Create a fake document manager for create-task tests."""
 
         self.should_fail = should_fail
-        self.page_id: str | None = None
-        self.updated_title: str | None = None
-        self.updated_body: str | None = None
-        self.representation: str | None = None
-        self.minor_edit: bool | None = None
+        self.heading: str | None = None
 
-    def get_page_by_id(self, page_id: str, expand: str) -> dict[str, Any]:
-        """Record the fetch request and return a stored page response."""
-
-        self.page_id = page_id
-        self.expand = expand
-        return {
-            "title": "Sprint page",
-            "body": {"storage": {"value": "<p>Existing</p>"}},
-        }
-
-    def update_page(
-        self,
-        page_id: str,
-        title: str,
-        body: str,
-        *,
-        representation: str,
-        minor_edit: bool,
-    ) -> object:
-        """Record the update request or raise the configured failure."""
+    def append_heading(self, heading: str) -> None:
+        """Record the heading or raise the configured failure."""
 
         if self.should_fail:
-            raise RuntimeError("Confluence update failed")
-
-        self.page_id = page_id
-        self.updated_title = title
-        self.updated_body = body
-        self.representation = representation
-        self.minor_edit = minor_edit
-        return object()
+            raise RuntimeError("Document update failed")
+        self.heading = heading
 
 
 class CreateTaskTest(TestCase):
@@ -69,46 +39,24 @@ class CreateTaskTest(TestCase):
 
         with TemporaryDirectory() as directory:
             config_path = _write_config(Path(directory), number=1)
-            client = FakeConfluenceClient()
-            seen_config: Config | None = None
-
-            def client_factory(config: Config) -> FakeConfluenceClient:
-                """Capture the config and return the fake client."""
-
-                nonlocal seen_config
-                seen_config = config
-                return client
+            document_manager = FakeDocumentManager()
 
             task_number = create_task(
                 "CI setup",
                 config_path=config_path,
-                client_factory=client_factory,
+                document_manager=document_manager,
             )
 
             self.assertEqual(task_number, 1)
             self.assertEqual(
-                seen_config,
-                Config(
-                    url="https://example.atlassian.net/wiki",
-                    token="token",
-                    page="123",
-                    number=1,
-                    email="user@example.com",
-                ),
-            )
-            self.assertEqual(client.page_id, "123")
-            self.assertEqual(client.updated_title, "Sprint page")
-            self.assertEqual(
-                client.updated_body,
-                "<p>Existing</p><h1>#1[1]CI setup "
+                document_manager.heading,
+                "<h1>#1[1]CI setup "
                 f'<time datetime="{date.today().isoformat()}" /> '
                 '<ac:structured-macro ac:name="status" ac:schema-version="1">'
                 '<ac:parameter ac:name="colour">Grey</ac:parameter>'
                 '<ac:parameter ac:name="title">TODO</ac:parameter>'
                 "</ac:structured-macro></h1>",
             )
-            self.assertEqual(client.representation, "storage")
-            self.assertFalse(client.minor_edit)
             self.assertIn("number = 2", config_path.read_text(encoding="utf-8"))
 
     def test_failed_confluence_update_does_not_increment_number(self) -> None:
@@ -116,13 +64,13 @@ class CreateTaskTest(TestCase):
 
         with TemporaryDirectory() as directory:
             config_path = _write_config(Path(directory), number=1)
-            client = FakeConfluenceClient(should_fail=True)
+            document_manager = FakeDocumentManager(should_fail=True)
 
-            with self.assertRaisesRegex(RuntimeError, "Confluence update failed"):
+            with self.assertRaisesRegex(RuntimeError, "Document update failed"):
                 create_task(
                     "CI setup",
                     config_path=config_path,
-                    client_factory=lambda _config: client,
+                    document_manager=document_manager,
                 )
 
             self.assertIn("number = 1", config_path.read_text(encoding="utf-8"))

@@ -3,7 +3,7 @@
 import typer
 
 from ss4d.config import ConfigError
-from ss4d.process.create_task import create_task
+from ss4d.container import Container
 
 app = typer.Typer(no_args_is_help=True)
 
@@ -18,7 +18,7 @@ def create(title: str) -> None:
     """Create a task heading in Confluence."""
 
     try:
-        task_number = create_task(title)
+        task_number = Container().create_task(title)
     except ConfigError as error:
         typer.echo(str(error), err=True)
         raise typer.Exit(code=1) from error
