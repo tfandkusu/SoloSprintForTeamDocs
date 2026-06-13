@@ -1,6 +1,7 @@
 """Create-task process."""
 
 from collections.abc import Callable, Mapping
+from datetime import date
 from html import escape
 from importlib import import_module
 from pathlib import Path
@@ -65,10 +66,21 @@ def create_task(
     return heading
 
 
-def format_task_heading(number: int, title: str) -> str:
+def format_task_heading(
+    number: int, title: str, *, due_date: date | None = None
+) -> str:
     """Format the Confluence storage h1 for a task."""
 
-    return f"<h1>#{number}[{STORY_POINTS}]{escape(title)}</h1>"
+    task_due_date = due_date or date.today()
+    return (
+        f"<h1>#{number}[{STORY_POINTS}]{escape(title)} "
+        f'<time datetime="{task_due_date.isoformat()}" /> '
+        '<ac:structured-macro ac:name="status" ac:schema-version="1">'
+        '<ac:parameter ac:name="colour">Grey</ac:parameter>'
+        '<ac:parameter ac:name="title">TODO</ac:parameter>'
+        "</ac:structured-macro>"
+        "</h1>"
+    )
 
 
 def _create_confluence_client(config: Config) -> ConfluenceClient:

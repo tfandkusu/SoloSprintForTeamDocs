@@ -1,3 +1,4 @@
+from datetime import date
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
@@ -55,8 +56,12 @@ class CreateTaskTest(TestCase):
         """Format task headings with default story points and escaped title."""
 
         self.assertEqual(
-            format_task_heading(1, "CI & deploy"),
-            "<h1>#1[1]CI &amp; deploy</h1>",
+            format_task_heading(1, "CI & deploy", due_date=date(2026, 6, 14)),
+            '<h1>#1[1]CI &amp; deploy <time datetime="2026-06-14" /> '
+            '<ac:structured-macro ac:name="status" ac:schema-version="1">'
+            '<ac:parameter ac:name="colour">Grey</ac:parameter>'
+            '<ac:parameter ac:name="title">TODO</ac:parameter>'
+            "</ac:structured-macro></h1>",
         )
 
     def test_create_task_updates_confluence_and_increments_number(self) -> None:
@@ -80,7 +85,10 @@ class CreateTaskTest(TestCase):
                 client_factory=client_factory,
             )
 
-            self.assertEqual(heading, "<h1>#1[1]CI setup</h1>")
+            self.assertIn("#1[1]CI setup", heading)
+            self.assertIn("<time datetime=", heading)
+            self.assertIn('<ac:parameter ac:name="colour">Grey</ac:parameter>', heading)
+            self.assertIn('<ac:parameter ac:name="title">TODO</ac:parameter>', heading)
             self.assertEqual(
                 seen_config,
                 Config(
@@ -95,7 +103,7 @@ class CreateTaskTest(TestCase):
             self.assertEqual(client.updated_title, "Sprint page")
             self.assertEqual(
                 client.updated_body,
-                "<p>Existing</p><h1>#1[1]CI setup</h1>",
+                f"<p>Existing</p>{heading}",
             )
             self.assertEqual(client.representation, "storage")
             self.assertFalse(client.minor_edit)
