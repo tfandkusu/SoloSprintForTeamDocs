@@ -1,9 +1,8 @@
-from datetime import date
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 
-from ss4d.process.create_task import create_task, format_task_heading
+from ss4d.process.create_task import create_task
 
 
 class FakeDocumentManager:
@@ -11,31 +10,21 @@ class FakeDocumentManager:
         """Create a fake document manager for create-task tests."""
 
         self.should_fail = should_fail
-        self.heading: str | None = None
+        self.number: int | None = None
+        self.title: str | None = None
 
-    def append_heading(self, heading: str) -> None:
-        """Record the heading or raise the configured failure."""
+    def append_task(self, number: int, title: str) -> None:
+        """Record the task or raise the configured failure."""
 
         if self.should_fail:
             raise RuntimeError("Document update failed")
-        self.heading = heading
+        self.number = number
+        self.title = title
 
 
 class CreateTaskTest(TestCase):
-    def test_format_task_heading_uses_default_points_without_spaces(self) -> None:
-        """Format task headings with default story points and escaped title."""
-
-        self.assertEqual(
-            format_task_heading(1, "CI & deploy", due_date=date(2026, 6, 14)),
-            '<h1>#1[1]CI &amp; deploy <time datetime="2026-06-14" /> '
-            '<ac:structured-macro ac:name="status" ac:schema-version="1">'
-            '<ac:parameter ac:name="colour">Grey</ac:parameter>'
-            '<ac:parameter ac:name="title">TODO</ac:parameter>'
-            "</ac:structured-macro></h1>",
-        )
-
-    def test_create_task_updates_confluence_and_increments_number(self) -> None:
-        """Update Confluence and increment the task number after success."""
+    def test_create_task_updates_document_and_increments_number(self) -> None:
+        """Update the document and increment the task number after success."""
 
         with TemporaryDirectory() as directory:
             config_path = _write_config(Path(directory), number=1)
@@ -48,19 +37,12 @@ class CreateTaskTest(TestCase):
             )
 
             self.assertEqual(task_number, 1)
-            self.assertEqual(
-                document_manager.heading,
-                "<h1>#1[1]CI setup "
-                f'<time datetime="{date.today().isoformat()}" /> '
-                '<ac:structured-macro ac:name="status" ac:schema-version="1">'
-                '<ac:parameter ac:name="colour">Grey</ac:parameter>'
-                '<ac:parameter ac:name="title">TODO</ac:parameter>'
-                "</ac:structured-macro></h1>",
-            )
+            self.assertEqual(document_manager.number, 1)
+            self.assertEqual(document_manager.title, "CI setup")
             self.assertIn("number = 2", config_path.read_text(encoding="utf-8"))
 
-    def test_failed_confluence_update_does_not_increment_number(self) -> None:
-        """Keep the task number unchanged when the Confluence update fails."""
+    def test_failed_document_update_does_not_increment_number(self) -> None:
+        """Keep the task number unchanged when the document update fails."""
 
         with TemporaryDirectory() as directory:
             config_path = _write_config(Path(directory), number=1)

@@ -2,10 +2,14 @@
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+from datetime import date
+from html import escape
 from importlib import import_module
 from typing import Protocol, cast
 
 from ss4d.config import Config
+
+STORY_POINTS = 1
 
 
 class ConfluenceClient(Protocol):
@@ -35,9 +39,10 @@ class ConfluenceDocumentManager:
     client: ConfluenceClient
     page_id: str
 
-    def append_heading(self, heading: str) -> None:
-        """Append a heading to the configured Confluence page."""
+    def append_task(self, number: int, title: str) -> None:
+        """Append a task heading to the configured Confluence page."""
 
+        heading = format_task_heading(number, title)
         page = self.client.get_page_by_id(
             self.page_id,
             expand="body.storage,version",
@@ -49,6 +54,15 @@ class ConfluenceDocumentManager:
             representation="storage",
             minor_edit=False,
         )
+
+
+def create_confluence_document_manager(config: Config) -> ConfluenceDocumentManager:
+    """Create a Confluence document manager from configuration."""
+
+    return ConfluenceDocumentManager(
+        client=create_confluence_client(config),
+        page_id=config.page,
+    )
 
 
 def create_confluence_client(config: Config) -> ConfluenceClient:
@@ -64,6 +78,23 @@ def create_confluence_client(config: Config) -> ConfluenceClient:
             password=config.token,
             cloud=True,
         ),
+    )
+
+
+def format_task_heading(
+    number: int, title: str, *, due_date: date | None = None
+) -> str:
+    """Format the Confluence storage h1 for a task."""
+
+    task_due_date = due_date or date.today()
+    return (
+        f"<h1>#{number}[{STORY_POINTS}]{escape(title)} "
+        f'<time datetime="{task_due_date.isoformat()}" /> '
+        '<ac:structured-macro ac:name="status" ac:schema-version="1">'
+        '<ac:parameter ac:name="colour">Grey</ac:parameter>'
+        '<ac:parameter ac:name="title">TODO</ac:parameter>'
+        "</ac:structured-macro>"
+        "</h1>"
     )
 
 

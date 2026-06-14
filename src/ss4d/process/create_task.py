@@ -1,45 +1,27 @@
 """Create-task process."""
 
-from datetime import date
-from html import escape
 from pathlib import Path
 
 from ss4d.config import CONFIG_PATH, increment_number, load_config
+from ss4d.document.confluence import create_confluence_document_manager
 from ss4d.document.manager import DocumentManager
-
-STORY_POINTS = 1
 
 
 def create_task(
     title: str,
     *,
-    document_manager: DocumentManager,
     config_path: Path = CONFIG_PATH,
+    document_manager: DocumentManager | None = None,
 ) -> int:
-    """Append a task heading to Confluence and return the created task number."""
+    """Append a task to the configured document and return the task number."""
 
     config = load_config(config_path)
     task_number = config.number
-    heading = format_task_heading(task_number, title)
 
-    document_manager.append_heading(heading)
+    if document_manager is None:
+        document_manager = create_confluence_document_manager(config)
+
+    document_manager.append_task(task_number, title)
 
     increment_number(config_path)
     return task_number
-
-
-def format_task_heading(
-    number: int, title: str, *, due_date: date | None = None
-) -> str:
-    """Format the Confluence storage h1 for a task."""
-
-    task_due_date = due_date or date.today()
-    return (
-        f"<h1>#{number}[{STORY_POINTS}]{escape(title)} "
-        f'<time datetime="{task_due_date.isoformat()}" /> '
-        '<ac:structured-macro ac:name="status" ac:schema-version="1">'
-        '<ac:parameter ac:name="colour">Grey</ac:parameter>'
-        '<ac:parameter ac:name="title">TODO</ac:parameter>'
-        "</ac:structured-macro>"
-        "</h1>"
-    )
