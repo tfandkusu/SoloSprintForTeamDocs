@@ -10,3 +10,7 @@ class DocumentManager(Protocol):
     def append_task(self, number: int, title: str) -> None:
         """Append a task to the configured document."""
         ...
+
+    def sort_tasks(self) -> None:
+        """Sort task sections in the configured document."""
+        ...

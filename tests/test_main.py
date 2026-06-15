@@ -17,3 +17,15 @@ class MainTest(TestCase):
 
         self.assertEqual(result.exit_code, 0)
         self.assertEqual(result.output, "Created task #7\n")
+
+    def test_sort_outputs_sorted_tasks(self) -> None:
+        """Output a sort completion message on success."""
+
+        runner = CliRunner()
+
+        with patch("ss4d.main.sort_tasks") as sort_tasks:
+            result = runner.invoke(app, ["sort"])
+
+        sort_tasks.assert_called_once_with()
+        self.assertEqual(result.exit_code, 0)
+        self.assertEqual(result.output, "Sorted tasks\n")
