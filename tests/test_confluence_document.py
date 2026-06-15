@@ -2,7 +2,11 @@ from datetime import date
 from typing import Any
 from unittest import TestCase
 
-from ss4d.document.confluence import ConfluenceDocumentManager, format_task_heading
+from ss4d.document.confluence import (
+    ConfluenceDocumentManager,
+    format_task_heading,
+    sort_storage_body,
+)
 
 
 class FakeConfluenceClient:
@@ -98,4 +102,65 @@ class ConfluenceDocumentManagerTest(TestCase):
             '<ac:parameter ac:name="colour">Grey</ac:parameter>'
             '<ac:parameter ac:name="title">TODO</ac:parameter>'
             "</ac:structured-macro></h1>",
+        )
+
+    def test_sort_tasks_updates_configured_page_storage_body(self) -> None:
+        """Sort task sections in the configured Confluence page."""
+
+        client = FakeConfluenceClient(
+            page={
+                "title": "Sprint page",
+                "body": {
+                    "storage": {
+                        "value": (
+                            "<p>Intro</p>"
+                            '<h1>#2 Later <time datetime="2026-06-20" /></h1>'
+                            "<p>Later body</p>"
+                            '<h1>#1 Earlier <time datetime="2026-06-18" /></h1>'
+                            "<p>Earlier body</p>"
+                        )
+                    }
+                },
+            }
+        )
+        manager = ConfluenceDocumentManager(client=client, page_id="123")
+
+        manager.sort_tasks()
+
+        self.assertEqual(client.page_id, "123")
+        self.assertEqual(client.expand, "body.storage,version")
+        self.assertEqual(client.updated_title, "Sprint page")
+        self.assertEqual(
+            client.updated_body,
+            "<p>Intro</p>"
+            '<h1>#1 Earlier <time datetime="2026-06-18" /></h1>'
+            "<p>Earlier body</p>"
+            '<h1>#2 Later <time datetime="2026-06-20" /></h1>'
+            "<p>Later body</p>",
+        )
+        self.assertEqual(client.representation, "storage")
+        self.assertFalse(client.minor_edit)
+
+    def test_sort_storage_body_sorts_h1_sections_by_due_date(self) -> None:
+        """Sort each h1-led section by nearest due date."""
+
+        body = (
+            "<p>Intro</p>\n"
+            '<h1>#2 Later <time datetime="2026-06-20" /></h1>\n'
+            "<p>Later body</p>\n"
+            '<h1>#1 Earlier <time datetime="2026-06-18" /></h1>\n'
+            "<p>Earlier body</p>\n"
+            "<h1>#3 Missing date</h1>\n"
+            "<p>Missing body</p>\n"
+        )
+
+        self.assertEqual(
+            sort_storage_body(body),
+            "<p>Intro</p>\n"
+            '<h1>#1 Earlier <time datetime="2026-06-18" /></h1>\n'
+            "<p>Earlier body</p>\n"
+            '<h1>#2 Later <time datetime="2026-06-20" /></h1>\n'
+            "<p>Later body</p>\n"
+            "<h1>#3 Missing date</h1>\n"
+            "<p>Missing body</p>\n",
         )

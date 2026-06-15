@@ -4,6 +4,7 @@ import typer
 
 from ss4d.config import ConfigError
 from ss4d.process.create_task import create_task
+from ss4d.process.sort_tasks import sort_tasks
 
 app = typer.Typer(no_args_is_help=True)
 
@@ -27,6 +28,22 @@ def create(title: str) -> None:
         raise typer.Exit(code=1) from error
 
     typer.echo(f"Created task #{task_number}")
+
+
+@app.command()
+def sort() -> None:
+    """Sort task headings in Confluence."""
+
+    try:
+        sort_tasks()
+    except ConfigError as error:
+        typer.echo(str(error), err=True)
+        raise typer.Exit(code=1) from error
+    except Exception as error:
+        typer.echo(f"Failed to sort tasks: {error}", err=True)
+        raise typer.Exit(code=1) from error
+
+    typer.echo("Sorted tasks")
 
 
 def main() -> None:
