@@ -8,7 +8,7 @@
 # Optional parameters:
 # @raycast.packageName SoloSprintForTeamDocs
 # @raycast.argument1 { "type": "text", "placeholder": "NUMBER" }
-# @raycast.argument2 { "type": "text", "placeholder": "todo|progress|review|done" }
+# @raycast.argument2 { "type": "dropdown", "placeholder": "STATUS", "data": [{"title": "todo", "value": "todo"}, {"title": "progress", "value": "progress"}, {"title": "review", "value": "review"}, {"title": "done", "value": "done"}] }
 # @raycast.description Update a task status in Confluence.
 
 set -e
