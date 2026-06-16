@@ -9,6 +9,9 @@ from html.parser import HTMLParser
 from importlib import import_module
 from typing import Protocol, cast
 
+from bs4 import BeautifulSoup
+from bs4.element import Tag
+
 from ss4d.config import Config
 
 STORY_POINTS = 1
@@ -18,9 +21,6 @@ STATUS_COLOURS = {
     "REVIEW": "Red",
     "DONE": "Green",
 }
-_STATUS_MACRO_PATTERN = re.compile(
-    r'<ac:structured-macro\b(?=[^>]*\bac:name="status")[\s\S]*?</ac:structured-macro>'
-)
 
 
 class ConfluenceClient(Protocol):
@@ -413,16 +413,30 @@ def _extract_task_status(section_body: str) -> str:
 def _replace_section_status(section_body: str, status_macro: str) -> str:
     """Replace the first status macro in a section, or insert one in its h1."""
 
-    updated_body, replacements = _STATUS_MACRO_PATTERN.subn(
-        status_macro,
-        section_body,
-        count=1,
+    soup = BeautifulSoup(section_body, "html.parser")
+    h1 = soup.find("h1")
+    if not isinstance(h1, Tag):
+        raise RuntimeError("Task section did not include an h1 tag.")
+
+    status_macro_tag = _parse_status_macro(status_macro)
+    current_status_macro = h1.find(
+        "ac:structured-macro",
+        attrs={"ac:name": "status"},
     )
-    if replacements > 0:
-        return updated_body
+    if isinstance(current_status_macro, Tag):
+        current_status_macro.replace_with(status_macro_tag)
+        return str(soup)
 
-    h1_end = section_body.lower().find("</h1>")
-    if h1_end == -1:
-        raise RuntimeError("Task heading did not include a closing h1 tag.")
+    h1.append(" ")
+    h1.append(status_macro_tag)
+    return str(soup)
 
-    return f"{section_body[:h1_end]} {status_macro}{section_body[h1_end:]}"
+
+def _parse_status_macro(status_macro: str) -> Tag:
+    """Parse a status macro fragment into a BeautifulSoup tag."""
+
+    soup = BeautifulSoup(status_macro, "html.parser")
+    macro = soup.find("ac:structured-macro", attrs={"ac:name": "status"})
+    if not isinstance(macro, Tag):
+        raise RuntimeError("Status macro fragment did not include a status macro.")
+    return macro

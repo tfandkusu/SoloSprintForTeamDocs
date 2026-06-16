@@ -178,7 +178,7 @@ class ConfluenceDocumentManagerTest(TestCase):
         self.assertEqual(
             client.updated_body,
             "<p>Intro</p>"
-            '<h1>#1[1]First <time datetime="2026-06-18" /> '
+            '<h1>#1[1]First <time datetime="2026-06-18"></time> '
             '<ac:structured-macro ac:name="status" ac:schema-version="1">'
             '<ac:parameter ac:name="colour">Red</ac:parameter>'
             '<ac:parameter ac:name="title">REVIEW</ac:parameter>'
@@ -285,7 +285,7 @@ class ConfluenceDocumentManagerTest(TestCase):
         self.assertEqual(
             update_storage_task_status(body, 1, "DONE"),
             "<p>Intro</p>"
-            '<h1>#1[1]First <time datetime="2026-06-18" /> '
+            '<h1>#1[1]First <time datetime="2026-06-18"></time> '
             '<ac:structured-macro ac:name="status" ac:schema-version="1">'
             '<ac:parameter ac:name="colour">Green</ac:parameter>'
             '<ac:parameter ac:name="title">DONE</ac:parameter>'
