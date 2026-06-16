@@ -4,11 +4,11 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from html import escape
-from html.parser import HTMLParser
 from importlib import import_module
 from typing import Protocol, cast
 
 from ss4d.config import Config
+from ss4d.document.confluence_storage import split_h1_sections
 
 STORY_POINTS = 1
 
@@ -115,12 +115,12 @@ def format_task_heading(
 
 
 def sort_storage_body(body: str) -> str:
-    """Sort h1 sections in a Confluence storage body by due date."""
+    """Sort h1 sections in a Confluence storage body by status and due date."""
 
-    preamble, sections = _split_h1_sections(body)
+    preamble, sections = split_h1_sections(body)
     sorted_sections = sorted(
         sections,
-        key=lambda section: section.due_date or date.max,
+        key=lambda section: (section.is_done, section.due_date or date.max),
     )
     return f"{preamble}{''.join(section.body for section in sorted_sections)}"
 
@@ -159,99 +159,3 @@ def _extract_storage_body(page: Mapping[str, object]) -> str:
         return ""
 
     return value
-
-
-@dataclass(frozen=True)
-class _H1Section:
-    """A sortable h1-led section from a storage-format body."""
-
-    body: str
-    due_date: date | None
-
-
-class _H1StartParser(HTMLParser):
-    """Find h1 start-tag offsets in a storage-format body."""
-
-    def __init__(self) -> None:
-        """Create a parser with no discovered offsets."""
-
-        super().__init__(convert_charrefs=False)
-        self.offsets: list[int] = []
-
-    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
-        """Record h1 start-tag offsets."""
-
-        if tag.lower() == "h1":
-            self.offsets.append(self.get_starttag_text_offset())
-
-    def get_starttag_text_offset(self) -> int:
-        """Return the absolute offset for the current start tag."""
-
-        line_number, column_number = self.getpos()
-        line_starts = self._line_starts
-        return line_starts[line_number - 1] + column_number
-
-    @property
-    def _line_starts(self) -> list[int]:
-        """Return absolute offsets for every line start."""
-
-        line_starts = [0]
-        for index, character in enumerate(self.rawdata):
-            if character == "\n":
-                line_starts.append(index + 1)
-        return line_starts
-
-
-class _DueDateParser(HTMLParser):
-    """Find the first time datetime value in an h1 section."""
-
-    def __init__(self) -> None:
-        """Create a parser with no discovered due date."""
-
-        super().__init__(convert_charrefs=False)
-        self.due_date: date | None = None
-
-    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
-        """Record the first valid time datetime value."""
-
-        if tag.lower() != "time" or self.due_date is not None:
-            return
-
-        raw_datetime = dict(attrs).get("datetime")
-        if raw_datetime is None:
-            return
-
-        try:
-            self.due_date = date.fromisoformat(raw_datetime)
-        except ValueError:
-            return
-
-
-def _split_h1_sections(body: str) -> tuple[str, list[_H1Section]]:
-    """Split a storage body into a preamble and h1-led sections."""
-
-    parser = _H1StartParser()
-    parser.feed(body)
-
-    if len(parser.offsets) == 0:
-        return body, []
-
-    preamble = body[: parser.offsets[0]]
-    sections: list[_H1Section] = []
-    section_offsets = [*parser.offsets, len(body)]
-
-    for index, start_offset in enumerate(section_offsets[:-1]):
-        section_body = body[start_offset : section_offsets[index + 1]]
-        sections.append(
-            _H1Section(body=section_body, due_date=_extract_due_date(section_body))
-        )
-
-    return preamble, sections
-
-
-def _extract_due_date(section_body: str) -> date | None:
-    """Extract the first valid due date from an h1 section."""
-
-    parser = _DueDateParser()
-    parser.feed(section_body)
-    return parser.due_date
