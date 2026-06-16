@@ -35,9 +35,27 @@ class MainTest(TestCase):
 
         runner = CliRunner()
 
-        with patch("ss4d.main.update_task_status") as update_task_status:
+        with patch("ss4d.main.update_task_status", return_value="DONE") as update_task_status:
             result = runner.invoke(app, ["status", "7", "done"])
 
         update_task_status.assert_called_once_with(7, "done")
         self.assertEqual(result.exit_code, 0)
-        self.assertEqual(result.output, "Updated task #7 status to DONE\n")
+        self.assertEqual(result.output, "Updated task #7 to DONE\n")
+
+    def test_status_outputs_error_when_update_fails(self) -> None:
+        """Output a status update error when the process fails."""
+
+        runner = CliRunner()
+
+        with patch(
+            "ss4d.main.update_task_status",
+            side_effect=ValueError("Status must be one of: TODO, PROGRESS, REVIEW, DONE."),
+        ):
+            result = runner.invoke(app, ["status", "7", "blocked"])
+
+        self.assertEqual(result.exit_code, 1)
+        self.assertEqual(
+            result.stderr,
+            "Failed to update task status: "
+            "Status must be one of: TODO, PROGRESS, REVIEW, DONE.\n",
+        )

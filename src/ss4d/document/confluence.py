@@ -139,7 +139,7 @@ def format_task_heading(
 def format_status_macro(status: str) -> str:
     """Format the Confluence storage status macro for a task status."""
 
-    status_name = _normalize_status(status)
+    status_name = normalize_task_status(status)
     colour = STATUS_COLOURS[status_name]
     return (
         '<ac:structured-macro ac:name="status" ac:schema-version="1">'
@@ -150,12 +150,12 @@ def format_status_macro(status: str) -> str:
 
 
 def sort_storage_body(body: str) -> str:
-    """Sort h1 sections in a Confluence storage body by due date."""
+    """Sort h1 sections in a Confluence storage body by status and due date."""
 
     preamble, sections = _split_h1_sections(body)
     sorted_sections = sorted(
         sections,
-        key=lambda section: section.due_date or date.max,
+        key=lambda section: (section.is_done, section.due_date or date.max),
     )
     return f"{preamble}{''.join(section.body for section in sorted_sections)}"
 
@@ -178,6 +178,16 @@ def update_storage_task_status(body: str, number: int, status: str) -> str:
         return f"{preamble}{''.join(updated_sections)}"
 
     raise RuntimeError(f"Task #{number} was not found.")
+
+
+def normalize_task_status(status: str) -> str:
+    """Return a supported uppercase status name."""
+
+    status_name = status.upper()
+    if status_name not in STATUS_COLOURS:
+        allowed_statuses = ", ".join(STATUS_COLOURS)
+        raise ValueError(f"Status must be one of: {allowed_statuses}.")
+    return status_name
 
 
 def _append_storage_body(page: Mapping[str, object], heading: str) -> str:
@@ -222,6 +232,7 @@ class _H1Section:
 
     body: str
     due_date: date | None
+    is_done: bool
     number: int | None
 
 
@@ -283,26 +294,69 @@ class _DueDateParser(HTMLParser):
             return
 
 
-class _TaskNumberParser(HTMLParser):
-    """Find the first task number in an h1 section."""
+class _TaskHeadingParser(HTMLParser):
+    """Find task metadata in an h1 section."""
 
     def __init__(self) -> None:
-        """Create a parser with no discovered task number."""
+        """Create a parser with no discovered task metadata."""
 
         super().__init__(convert_charrefs=False)
         self.number: int | None = None
+        self.status = ""
+        self._h1_depth = 0
+        self._status_macro_depth = 0
+        self._in_status_title = False
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        """Record h1 nesting and status macro parameter state."""
+
+        attributes = dict(attrs)
+        tag_name = tag.lower()
+        if tag_name == "h1":
+            self._h1_depth += 1
+
+        if self._h1_depth == 0:
+            return
+
+        if tag_name == "ac:structured-macro" and attributes.get("ac:name") == "status":
+            self._status_macro_depth += 1
+            return
+
+        if (
+            self._status_macro_depth > 0
+            and tag_name == "ac:parameter"
+            and attributes.get("ac:name") == "title"
+        ):
+            self._in_status_title = True
+
+    def handle_endtag(self, tag: str) -> None:
+        """Record h1 nesting and status macro parameter state."""
+
+        tag_name = tag.lower()
+        if tag_name == "ac:parameter":
+            self._in_status_title = False
+            return
+
+        if tag_name == "ac:structured-macro" and self._status_macro_depth > 0:
+            self._status_macro_depth -= 1
+            return
+
+        if tag_name == "h1" and self._h1_depth > 0:
+            self._h1_depth -= 1
 
     def handle_data(self, data: str) -> None:
-        """Record the first task number found in heading text."""
+        """Record task number and status title found in heading text."""
 
-        if self.number is not None:
+        if self._h1_depth == 0:
             return
 
-        match = re.search(r"#(\d+)(?!\d)", data)
-        if match is None:
-            return
+        if self.number is None:
+            match = re.search(r"#(\d+)(?!\d)", data)
+            if match is not None:
+                self.number = int(match.group(1))
 
-        self.number = int(match.group(1))
+        if self._in_status_title and self.status == "":
+            self.status = data.strip()
 
 
 def _split_h1_sections(body: str) -> tuple[str, list[_H1Section]]:
@@ -324,6 +378,7 @@ def _split_h1_sections(body: str) -> tuple[str, list[_H1Section]]:
             _H1Section(
                 body=section_body,
                 due_date=_extract_due_date(section_body),
+                is_done=_extract_task_status(section_body).upper() == "DONE",
                 number=_extract_task_number(section_body),
             )
         )
@@ -342,19 +397,17 @@ def _extract_due_date(section_body: str) -> date | None:
 def _extract_task_number(section_body: str) -> int | None:
     """Extract the first task number from an h1 section."""
 
-    parser = _TaskNumberParser()
+    parser = _TaskHeadingParser()
     parser.feed(section_body)
     return parser.number
 
 
-def _normalize_status(status: str) -> str:
-    """Return a supported uppercase status name."""
+def _extract_task_status(section_body: str) -> str:
+    """Extract the first task status from an h1 section."""
 
-    status_name = status.upper()
-    if status_name not in STATUS_COLOURS:
-        allowed_statuses = ", ".join(STATUS_COLOURS)
-        raise ValueError(f"Status must be one of: {allowed_statuses}.")
-    return status_name
+    parser = _TaskHeadingParser()
+    parser.feed(section_body)
+    return parser.status
 
 
 def _replace_section_status(section_body: str, status_macro: str) -> str:

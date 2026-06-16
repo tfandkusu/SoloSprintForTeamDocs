@@ -52,7 +52,7 @@ def status(number: int, status_name: str) -> None:
     """Update a task status in Confluence."""
 
     try:
-        update_task_status(number, status_name)
+        updated_status = update_task_status(number, status_name)
     except ConfigError as error:
         typer.echo(str(error), err=True)
         raise typer.Exit(code=1) from error
@@ -60,7 +60,7 @@ def status(number: int, status_name: str) -> None:
         typer.echo(f"Failed to update task status: {error}", err=True)
         raise typer.Exit(code=1) from error
 
-    typer.echo(f"Updated task #{number} status to {status_name.upper()}")
+    typer.echo(f"Updated task #{number} to {updated_status}")
 
 
 def main() -> None:

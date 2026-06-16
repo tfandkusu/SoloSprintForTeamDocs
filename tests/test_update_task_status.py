@@ -36,15 +36,34 @@ class UpdateTaskStatusTest(TestCase):
             config_path = _write_config(Path(directory), number=1)
             document_manager = FakeDocumentManager()
 
-            update_task_status(
+            updated_status = update_task_status(
                 7,
-                "DONE",
+                "done",
                 config_path=config_path,
                 document_manager=document_manager,
             )
 
+            self.assertEqual(updated_status, "DONE")
             self.assertEqual(document_manager.number, 7)
             self.assertEqual(document_manager.status, "DONE")
+
+    def test_unknown_status_does_not_update_document(self) -> None:
+        """Reject unknown statuses before updating the document."""
+
+        with TemporaryDirectory() as directory:
+            config_path = _write_config(Path(directory), number=1)
+            document_manager = FakeDocumentManager()
+
+            with self.assertRaisesRegex(ValueError, "Status must be one of"):
+                update_task_status(
+                    7,
+                    "blocked",
+                    config_path=config_path,
+                    document_manager=document_manager,
+                )
+
+            self.assertIsNone(document_manager.number)
+            self.assertIsNone(document_manager.status)
 
     def test_failed_document_update_raises_error(self) -> None:
         """Raise the document update error when status update fails."""

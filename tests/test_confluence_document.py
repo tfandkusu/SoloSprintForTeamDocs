@@ -217,6 +217,54 @@ class ConfluenceDocumentManagerTest(TestCase):
             "<p>Missing body</p>\n",
         )
 
+    def test_sort_storage_body_sorts_done_tasks_after_other_statuses(self) -> None:
+        """Sort done sections after non-done sections, then by nearest due date."""
+
+        body = (
+            "<p>Intro</p>\n"
+            '<h1>#4 Done later <time datetime="2026-06-22" /> '
+            '<ac:structured-macro ac:name="status" ac:schema-version="1">'
+            '<ac:parameter ac:name="colour">Green</ac:parameter>'
+            '<ac:parameter ac:name="title">DONE</ac:parameter>'
+            "</ac:structured-macro></h1>\n"
+            "<p>Done later body</p>\n"
+            '<h1>#1 Review soon <time datetime="2026-06-18" /> '
+            '<ac:structured-macro ac:name="status" ac:schema-version="1">'
+            '<ac:parameter ac:name="colour">Red</ac:parameter>'
+            '<ac:parameter ac:name="title">REVIEW</ac:parameter>'
+            "</ac:structured-macro></h1>\n"
+            "<p>Review soon body</p>\n"
+            '<h1>#2 Done earlier <time datetime="2026-06-10" /> '
+            '<ac:structured-macro ac:name="status" ac:schema-version="1">'
+            '<ac:parameter ac:name="colour">Green</ac:parameter>'
+            '<ac:parameter ac:name="title">DONE</ac:parameter>'
+            "</ac:structured-macro></h1>\n"
+            "<p>Done earlier body</p>\n"
+        )
+
+        self.assertEqual(
+            sort_storage_body(body),
+            "<p>Intro</p>\n"
+            '<h1>#1 Review soon <time datetime="2026-06-18" /> '
+            '<ac:structured-macro ac:name="status" ac:schema-version="1">'
+            '<ac:parameter ac:name="colour">Red</ac:parameter>'
+            '<ac:parameter ac:name="title">REVIEW</ac:parameter>'
+            "</ac:structured-macro></h1>\n"
+            "<p>Review soon body</p>\n"
+            '<h1>#2 Done earlier <time datetime="2026-06-10" /> '
+            '<ac:structured-macro ac:name="status" ac:schema-version="1">'
+            '<ac:parameter ac:name="colour">Green</ac:parameter>'
+            '<ac:parameter ac:name="title">DONE</ac:parameter>'
+            "</ac:structured-macro></h1>\n"
+            "<p>Done earlier body</p>\n"
+            '<h1>#4 Done later <time datetime="2026-06-22" /> '
+            '<ac:structured-macro ac:name="status" ac:schema-version="1">'
+            '<ac:parameter ac:name="colour">Green</ac:parameter>'
+            '<ac:parameter ac:name="title">DONE</ac:parameter>'
+            "</ac:structured-macro></h1>\n"
+            "<p>Done later body</p>\n",
+        )
+
     def test_update_storage_task_status_replaces_matching_task_status(self) -> None:
         """Replace only the matching task section status macro."""
 
