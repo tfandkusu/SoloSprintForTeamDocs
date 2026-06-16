@@ -173,7 +173,7 @@ class ConfluenceDocumentManagerTest(TestCase):
             '<h1>#4 Done later <time datetime="2026-06-22" /> '
             f"{_status_macro('DONE')}</h1>\n"
             "<p>Done later body</p>\n"
-            '<h1>#3 Todo missing date '
+            "<h1>#3 Todo missing date "
             f"{_status_macro('TODO')}</h1>\n"
             "<p>Todo missing date body</p>\n"
             '<h1>#2 Done earlier <time datetime="2026-06-10" /> '
@@ -196,7 +196,7 @@ class ConfluenceDocumentManagerTest(TestCase):
             '<h1>#5 Todo later <time datetime="2026-06-20" /> '
             f"{_status_macro('TODO')}</h1>\n"
             "<p>Todo later body</p>\n"
-            '<h1>#3 Todo missing date '
+            "<h1>#3 Todo missing date "
             f"{_status_macro('TODO')}</h1>\n"
             "<p>Todo missing date body</p>\n"
             '<h1>#2 Done earlier <time datetime="2026-06-10" /> '
