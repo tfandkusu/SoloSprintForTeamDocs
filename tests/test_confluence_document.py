@@ -164,3 +164,55 @@ class ConfluenceDocumentManagerTest(TestCase):
             "<h1>#3 Missing date</h1>\n"
             "<p>Missing body</p>\n",
         )
+
+    def test_sort_storage_body_sorts_done_tasks_after_other_statuses(self) -> None:
+        """Sort done sections after non-done sections, then by nearest due date."""
+
+        body = (
+            "<p>Intro</p>\n"
+            '<h1>#4 Done later <time datetime="2026-06-22" /> '
+            f"{_status_macro('DONE')}</h1>\n"
+            "<p>Done later body</p>\n"
+            '<h1>#3 Todo missing date '
+            f"{_status_macro('TODO')}</h1>\n"
+            "<p>Todo missing date body</p>\n"
+            '<h1>#2 Done earlier <time datetime="2026-06-10" /> '
+            f"{_status_macro('DONE')}</h1>\n"
+            "<p>Done earlier body</p>\n"
+            '<h1>#1 Review soon <time datetime="2026-06-18" /> '
+            f"{_status_macro('REVIEW')}</h1>\n"
+            "<p>Review soon body</p>\n"
+            '<h1>#5 Todo later <time datetime="2026-06-20" /> '
+            f"{_status_macro('TODO')}</h1>\n"
+            "<p>Todo later body</p>\n"
+        )
+
+        self.assertEqual(
+            sort_storage_body(body),
+            "<p>Intro</p>\n"
+            '<h1>#1 Review soon <time datetime="2026-06-18" /> '
+            f"{_status_macro('REVIEW')}</h1>\n"
+            "<p>Review soon body</p>\n"
+            '<h1>#5 Todo later <time datetime="2026-06-20" /> '
+            f"{_status_macro('TODO')}</h1>\n"
+            "<p>Todo later body</p>\n"
+            '<h1>#3 Todo missing date '
+            f"{_status_macro('TODO')}</h1>\n"
+            "<p>Todo missing date body</p>\n"
+            '<h1>#2 Done earlier <time datetime="2026-06-10" /> '
+            f"{_status_macro('DONE')}</h1>\n"
+            "<p>Done earlier body</p>\n"
+            '<h1>#4 Done later <time datetime="2026-06-22" /> '
+            f"{_status_macro('DONE')}</h1>\n"
+            "<p>Done later body</p>\n",
+        )
+
+
+def _status_macro(status: str) -> str:
+    """Format a status macro fixture."""
+
+    return (
+        '<ac:structured-macro ac:name="status" ac:schema-version="1">'
+        f'<ac:parameter ac:name="title">{status}</ac:parameter>'
+        "</ac:structured-macro>"
+    )

@@ -115,12 +115,12 @@ def format_task_heading(
 
 
 def sort_storage_body(body: str) -> str:
-    """Sort h1 sections in a Confluence storage body by due date."""
+    """Sort h1 sections in a Confluence storage body by status and due date."""
 
     preamble, sections = _split_h1_sections(body)
     sorted_sections = sorted(
         sections,
-        key=lambda section: section.due_date or date.max,
+        key=lambda section: (section.is_done, section.due_date or date.max),
     )
     return f"{preamble}{''.join(section.body for section in sorted_sections)}"
 
@@ -167,6 +167,7 @@ class _H1Section:
 
     body: str
     due_date: date | None
+    is_done: bool
 
 
 class _H1StartParser(HTMLParser):
@@ -227,6 +228,56 @@ class _DueDateParser(HTMLParser):
             return
 
 
+class _StatusParser(HTMLParser):
+    """Find the first task status macro title in an h1 section."""
+
+    def __init__(self) -> None:
+        """Create a parser with no discovered status."""
+
+        super().__init__(convert_charrefs=False)
+        self.status: str | None = None
+        self._inside_status_macro = False
+        self._inside_title_parameter = False
+        self._title_parts: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        """Track status macro and title parameter start tags."""
+
+        if self.status is not None:
+            return
+
+        attr_values = dict(attrs)
+        if tag.lower() == "ac:structured-macro":
+            self._inside_status_macro = attr_values.get("ac:name") == "status"
+            return
+
+        if not self._inside_status_macro or tag.lower() != "ac:parameter":
+            return
+
+        if attr_values.get("ac:name") == "title":
+            self._inside_title_parameter = True
+            self._title_parts = []
+
+    def handle_data(self, data: str) -> None:
+        """Collect title parameter text while inside a status macro."""
+
+        if self._inside_status_macro and self._inside_title_parameter:
+            self._title_parts.append(data)
+
+    def handle_endtag(self, tag: str) -> None:
+        """Track status macro and title parameter end tags."""
+
+        lowered_tag = tag.lower()
+        if lowered_tag == "ac:parameter" and self._inside_title_parameter:
+            self.status = "".join(self._title_parts).strip()
+            self._inside_title_parameter = False
+            return
+
+        if lowered_tag == "ac:structured-macro":
+            self._inside_status_macro = False
+            self._inside_title_parameter = False
+
+
 def _split_h1_sections(body: str) -> tuple[str, list[_H1Section]]:
     """Split a storage body into a preamble and h1-led sections."""
 
@@ -243,7 +294,11 @@ def _split_h1_sections(body: str) -> tuple[str, list[_H1Section]]:
     for index, start_offset in enumerate(section_offsets[:-1]):
         section_body = body[start_offset : section_offsets[index + 1]]
         sections.append(
-            _H1Section(body=section_body, due_date=_extract_due_date(section_body))
+            _H1Section(
+                body=section_body,
+                due_date=_extract_due_date(section_body),
+                is_done=_extract_status(section_body).upper() == "DONE",
+            )
         )
 
     return preamble, sections
@@ -255,3 +310,11 @@ def _extract_due_date(section_body: str) -> date | None:
     parser = _DueDateParser()
     parser.feed(section_body)
     return parser.due_date
+
+
+def _extract_status(section_body: str) -> str:
+    """Extract the first status macro title from an h1 section."""
+
+    parser = _StatusParser()
+    parser.feed(section_body)
+    return parser.status or ""
