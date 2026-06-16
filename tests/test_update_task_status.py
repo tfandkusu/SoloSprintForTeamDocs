@@ -2,54 +2,61 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 
-from ss4d.process.sort_tasks import sort_tasks
+from ss4d.process.update_task_status import update_task_status
 
 
 class FakeDocumentManager:
     def __init__(self, *, should_fail: bool = False) -> None:
-        """Create a fake document manager for sort-task tests."""
+        """Create a fake document manager for update-task-status tests."""
 
         self.should_fail = should_fail
-        self.sorted = False
+        self.number: int | None = None
+        self.status: str | None = None
 
     def append_task(self, number: int, title: str) -> None:
         """Ignore append calls required by the document manager protocol."""
 
     def sort_tasks(self) -> None:
-        """Record the sort request or raise the configured failure."""
+        """Ignore sort calls required by the document manager protocol."""
+
+    def update_task_status(self, number: int, status: str) -> None:
+        """Record the status update request or raise the configured failure."""
 
         if self.should_fail:
             raise RuntimeError("Document update failed")
-        self.sorted = True
-
-    def update_task_status(self, number: int, status: str) -> None:
-        """Ignore status calls required by the document manager protocol."""
+        self.number = number
+        self.status = status
 
 
-class SortTasksTest(TestCase):
-    def test_sort_tasks_updates_document(self) -> None:
-        """Sort tasks in the configured document."""
+class UpdateTaskStatusTest(TestCase):
+    def test_update_task_status_updates_document(self) -> None:
+        """Update a task status in the configured document."""
 
         with TemporaryDirectory() as directory:
             config_path = _write_config(Path(directory), number=1)
             document_manager = FakeDocumentManager()
 
-            sort_tasks(
+            update_task_status(
+                7,
+                "DONE",
                 config_path=config_path,
                 document_manager=document_manager,
             )
 
-            self.assertTrue(document_manager.sorted)
+            self.assertEqual(document_manager.number, 7)
+            self.assertEqual(document_manager.status, "DONE")
 
     def test_failed_document_update_raises_error(self) -> None:
-        """Raise the document update error when sorting fails."""
+        """Raise the document update error when status update fails."""
 
         with TemporaryDirectory() as directory:
             config_path = _write_config(Path(directory), number=1)
             document_manager = FakeDocumentManager(should_fail=True)
 
             with self.assertRaisesRegex(RuntimeError, "Document update failed"):
-                sort_tasks(
+                update_task_status(
+                    7,
+                    "DONE",
                     config_path=config_path,
                     document_manager=document_manager,
                 )

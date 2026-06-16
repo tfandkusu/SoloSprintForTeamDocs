@@ -14,3 +14,7 @@ class DocumentManager(Protocol):
     def sort_tasks(self) -> None:
         """Sort task sections in the configured document."""
         ...
+
+    def update_task_status(self, number: int, status: str) -> None:
+        """Update a task status in the configured document."""
+        ...

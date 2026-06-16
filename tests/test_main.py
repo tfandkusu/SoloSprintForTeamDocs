@@ -29,3 +29,15 @@ class MainTest(TestCase):
         sort_tasks.assert_called_once_with()
         self.assertEqual(result.exit_code, 0)
         self.assertEqual(result.output, "Sorted tasks\n")
+
+    def test_status_outputs_updated_task_status(self) -> None:
+        """Output a status update completion message on success."""
+
+        runner = CliRunner()
+
+        with patch("ss4d.main.update_task_status") as update_task_status:
+            result = runner.invoke(app, ["status", "7", "done"])
+
+        update_task_status.assert_called_once_with(7, "done")
+        self.assertEqual(result.exit_code, 0)
+        self.assertEqual(result.output, "Updated task #7 status to DONE\n")

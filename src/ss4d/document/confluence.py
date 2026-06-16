@@ -1,5 +1,6 @@
 """Confluence document manager."""
 
+import re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
@@ -11,6 +12,15 @@ from typing import Protocol, cast
 from ss4d.config import Config
 
 STORY_POINTS = 1
+STATUS_COLOURS = {
+    "TODO": "Grey",
+    "PROGRESS": "Blue",
+    "REVIEW": "Red",
+    "DONE": "Green",
+}
+_STATUS_MACRO_PATTERN = re.compile(
+    r'<ac:structured-macro\b(?=[^>]*\bac:name="status")[\s\S]*?</ac:structured-macro>'
+)
 
 
 class ConfluenceClient(Protocol):
@@ -71,6 +81,21 @@ class ConfluenceDocumentManager:
             minor_edit=False,
         )
 
+    def update_task_status(self, number: int, status: str) -> None:
+        """Update a task status in the configured Confluence page."""
+
+        page = self.client.get_page_by_id(
+            self.page_id,
+            expand="body.storage,version",
+        )
+        self.client.update_page(
+            self.page_id,
+            _extract_page_title(page),
+            update_storage_task_status(_extract_storage_body(page), number, status),
+            representation="storage",
+            minor_edit=False,
+        )
+
 
 def create_confluence_document_manager(config: Config) -> ConfluenceDocumentManager:
     """Create a Confluence document manager from configuration."""
@@ -106,11 +131,21 @@ def format_task_heading(
     return (
         f"<h1>#{number}[{STORY_POINTS}]{escape(title)} "
         f'<time datetime="{task_due_date.isoformat()}" /> '
-        '<ac:structured-macro ac:name="status" ac:schema-version="1">'
-        '<ac:parameter ac:name="colour">Grey</ac:parameter>'
-        '<ac:parameter ac:name="title">TODO</ac:parameter>'
-        "</ac:structured-macro>"
+        f"{format_status_macro('TODO')}"
         "</h1>"
+    )
+
+
+def format_status_macro(status: str) -> str:
+    """Format the Confluence storage status macro for a task status."""
+
+    status_name = _normalize_status(status)
+    colour = STATUS_COLOURS[status_name]
+    return (
+        '<ac:structured-macro ac:name="status" ac:schema-version="1">'
+        f'<ac:parameter ac:name="colour">{colour}</ac:parameter>'
+        f'<ac:parameter ac:name="title">{status_name}</ac:parameter>'
+        "</ac:structured-macro>"
     )
 
 
@@ -123,6 +158,26 @@ def sort_storage_body(body: str) -> str:
         key=lambda section: section.due_date or date.max,
     )
     return f"{preamble}{''.join(section.body for section in sorted_sections)}"
+
+
+def update_storage_task_status(body: str, number: int, status: str) -> str:
+    """Update the status macro for a task h1 section in storage body."""
+
+    status_macro = format_status_macro(status)
+    preamble, sections = _split_h1_sections(body)
+
+    for index, section in enumerate(sections):
+        if section.number != number:
+            continue
+
+        updated_section = _replace_section_status(section.body, status_macro)
+        updated_sections = [
+            other.body if section_index != index else updated_section
+            for section_index, other in enumerate(sections)
+        ]
+        return f"{preamble}{''.join(updated_sections)}"
+
+    raise RuntimeError(f"Task #{number} was not found.")
 
 
 def _append_storage_body(page: Mapping[str, object], heading: str) -> str:
@@ -167,6 +222,7 @@ class _H1Section:
 
     body: str
     due_date: date | None
+    number: int | None
 
 
 class _H1StartParser(HTMLParser):
@@ -227,6 +283,28 @@ class _DueDateParser(HTMLParser):
             return
 
 
+class _TaskNumberParser(HTMLParser):
+    """Find the first task number in an h1 section."""
+
+    def __init__(self) -> None:
+        """Create a parser with no discovered task number."""
+
+        super().__init__(convert_charrefs=False)
+        self.number: int | None = None
+
+    def handle_data(self, data: str) -> None:
+        """Record the first task number found in heading text."""
+
+        if self.number is not None:
+            return
+
+        match = re.search(r"#(\d+)(?!\d)", data)
+        if match is None:
+            return
+
+        self.number = int(match.group(1))
+
+
 def _split_h1_sections(body: str) -> tuple[str, list[_H1Section]]:
     """Split a storage body into a preamble and h1-led sections."""
 
@@ -243,7 +321,11 @@ def _split_h1_sections(body: str) -> tuple[str, list[_H1Section]]:
     for index, start_offset in enumerate(section_offsets[:-1]):
         section_body = body[start_offset : section_offsets[index + 1]]
         sections.append(
-            _H1Section(body=section_body, due_date=_extract_due_date(section_body))
+            _H1Section(
+                body=section_body,
+                due_date=_extract_due_date(section_body),
+                number=_extract_task_number(section_body),
+            )
         )
 
     return preamble, sections
@@ -255,3 +337,39 @@ def _extract_due_date(section_body: str) -> date | None:
     parser = _DueDateParser()
     parser.feed(section_body)
     return parser.due_date
+
+
+def _extract_task_number(section_body: str) -> int | None:
+    """Extract the first task number from an h1 section."""
+
+    parser = _TaskNumberParser()
+    parser.feed(section_body)
+    return parser.number
+
+
+def _normalize_status(status: str) -> str:
+    """Return a supported uppercase status name."""
+
+    status_name = status.upper()
+    if status_name not in STATUS_COLOURS:
+        allowed_statuses = ", ".join(STATUS_COLOURS)
+        raise ValueError(f"Status must be one of: {allowed_statuses}.")
+    return status_name
+
+
+def _replace_section_status(section_body: str, status_macro: str) -> str:
+    """Replace the first status macro in a section, or insert one in its h1."""
+
+    updated_body, replacements = _STATUS_MACRO_PATTERN.subn(
+        status_macro,
+        section_body,
+        count=1,
+    )
+    if replacements > 0:
+        return updated_body
+
+    h1_end = section_body.lower().find("</h1>")
+    if h1_end == -1:
+        raise RuntimeError("Task heading did not include a closing h1 tag.")
+
+    return f"{section_body[:h1_end]} {status_macro}{section_body[h1_end:]}"
