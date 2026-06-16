@@ -133,9 +133,9 @@ class ConfluenceDocumentManagerTest(TestCase):
         self.assertEqual(
             client.updated_body,
             "<p>Intro</p>"
-            '<h1>#1 Earlier <time datetime="2026-06-18" /></h1>'
+            '<h1>#1 Earlier <time datetime="2026-06-18"></time></h1>'
             "<p>Earlier body</p>"
-            '<h1>#2 Later <time datetime="2026-06-20" /></h1>'
+            '<h1>#2 Later <time datetime="2026-06-20"></time></h1>'
             "<p>Later body</p>",
         )
         self.assertEqual(client.representation, "storage")
@@ -157,9 +157,9 @@ class ConfluenceDocumentManagerTest(TestCase):
         self.assertEqual(
             sort_storage_body(body),
             "<p>Intro</p>\n"
-            '<h1>#1 Earlier <time datetime="2026-06-18" /></h1>\n'
+            '<h1>#1 Earlier <time datetime="2026-06-18"></time></h1>\n'
             "<p>Earlier body</p>\n"
-            '<h1>#2 Later <time datetime="2026-06-20" /></h1>\n'
+            '<h1>#2 Later <time datetime="2026-06-20"></time></h1>\n'
             "<p>Later body</p>\n"
             "<h1>#3 Missing date</h1>\n"
             "<p>Missing body</p>\n",
@@ -190,19 +190,19 @@ class ConfluenceDocumentManagerTest(TestCase):
         self.assertEqual(
             sort_storage_body(body),
             "<p>Intro</p>\n"
-            '<h1>#1 Review soon <time datetime="2026-06-18" /> '
+            '<h1>#1 Review soon <time datetime="2026-06-18"></time> '
             f"{_status_macro('REVIEW')}</h1>\n"
             "<p>Review soon body</p>\n"
-            '<h1>#5 Todo later <time datetime="2026-06-20" /> '
+            '<h1>#5 Todo later <time datetime="2026-06-20"></time> '
             f"{_status_macro('TODO')}</h1>\n"
             "<p>Todo later body</p>\n"
             "<h1>#3 Todo missing date "
             f"{_status_macro('TODO')}</h1>\n"
             "<p>Todo missing date body</p>\n"
-            '<h1>#2 Done earlier <time datetime="2026-06-10" /> '
+            '<h1>#2 Done earlier <time datetime="2026-06-10"></time> '
             f"{_status_macro('DONE')}</h1>\n"
             "<p>Done earlier body</p>\n"
-            '<h1>#4 Done later <time datetime="2026-06-22" /> '
+            '<h1>#4 Done later <time datetime="2026-06-22"></time> '
             f"{_status_macro('DONE')}</h1>\n"
             "<p>Done later body</p>\n",
         )
