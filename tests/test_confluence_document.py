@@ -2,8 +2,8 @@ from datetime import date
 from typing import Any
 from unittest import TestCase
 
-from ss4d.document.confluence import (
-    ConfluenceDocumentManager,
+from ss4d.document.confluence import ConfluenceDocumentManager
+from ss4d.document.confluence_html import (
     format_task_heading,
     sort_storage_body,
     update_storage_task_status,
