@@ -1,4 +1,4 @@
-"""Confluence storage-format body parser."""
+"""Confluence HTML body parser and serializer."""
 
 import re
 from dataclasses import dataclass
@@ -10,7 +10,7 @@ from bs4.element import PageElement, Tag
 
 @dataclass(frozen=True)
 class H1Section:
-    """An h1-led section from a Confluence storage-format body."""
+    """An h1-led section from a Confluence HTML body."""
 
     body: str
     due_date: date | None
@@ -19,7 +19,7 @@ class H1Section:
 
 
 def split_h1_sections(body: str) -> tuple[str, list[H1Section]]:
-    """Split a storage body into a preamble and h1-led sections."""
+    """Split an HTML body into a preamble and h1-led sections."""
 
     soup = BeautifulSoup(body, "html.parser")
     contents = list(soup.contents)

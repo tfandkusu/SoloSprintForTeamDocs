@@ -11,7 +11,7 @@ from bs4 import BeautifulSoup
 from bs4.element import Tag
 
 from ss4d.config import Config
-from ss4d.document.confluence_storage import split_h1_sections
+from ss4d.document.confluence_html import split_h1_sections
 
 STORY_POINTS = 1
 STATUS_COLOURS = {
