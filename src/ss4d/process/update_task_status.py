@@ -4,7 +4,7 @@ from pathlib import Path
 
 from ss4d.config import CONFIG_PATH, load_config
 from ss4d.document.confluence import create_confluence_document_manager
-from ss4d.document.confluence_html import normalize_task_status
+from ss4d.document.confluence_html_builder import normalize_task_status
 from ss4d.document.manager import DocumentManager
 
 

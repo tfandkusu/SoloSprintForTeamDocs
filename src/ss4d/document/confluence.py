@@ -6,8 +6,8 @@ from importlib import import_module
 from typing import Protocol, cast
 
 from ss4d.config import Config
-from ss4d.document.confluence_html import (
-    format_task_heading,
+from ss4d.document.confluence_html_builder import format_task_heading
+from ss4d.document.confluence_html_parser import (
     sort_storage_body,
     update_storage_task_status,
 )
