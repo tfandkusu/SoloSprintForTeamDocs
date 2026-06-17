@@ -1,23 +1,16 @@
-"""Confluence storage-format body parser."""
+"""Confluence HTML body parser and serializer."""
 
-from dataclasses import dataclass
+import re
 from datetime import date
 
 from bs4 import BeautifulSoup
 from bs4.element import PageElement, Tag
 
-
-@dataclass(frozen=True)
-class H1Section:
-    """An h1-led section from a Confluence storage-format body."""
-
-    body: str
-    due_date: date | None
-    is_done: bool
+from ss4d.document.confluence_h1_section import H1Section
 
 
 def split_h1_sections(body: str) -> tuple[str, list[H1Section]]:
-    """Split a storage body into a preamble and h1-led sections."""
+    """Split an HTML body into a preamble and h1-led sections."""
 
     soup = BeautifulSoup(body, "html.parser")
     contents = list(soup.contents)
@@ -47,6 +40,7 @@ def _create_section(elements: list[PageElement]) -> H1Section:
         body=_serialize(elements),
         due_date=_extract_due_date(h1),
         is_done=_extract_status(h1).upper() == "DONE",
+        number=_extract_task_number(h1),
     )
 
 
@@ -79,6 +73,25 @@ def _extract_status(h1: Tag) -> str:
         return ""
 
     return title.get_text(strip=True)
+
+
+def _extract_task_number(h1: Tag) -> int | None:
+    """Extract the first task number from an h1 tag."""
+
+    match = re.search(r"#(\d+)(?!\d)", h1.get_text())
+    if match is None:
+        return None
+    return int(match.group(1))
+
+
+def parse_status_macro(status_macro: str) -> Tag:
+    """Parse a status macro fragment into a BeautifulSoup tag."""
+
+    soup = BeautifulSoup(status_macro, "html.parser")
+    macro = soup.find("ac:structured-macro", attrs={"ac:name": "status"})
+    if not isinstance(macro, Tag):
+        raise RuntimeError("Status macro fragment did not include a status macro.")
+    return macro
 
 
 def _is_tag(element: PageElement, name: str) -> bool:

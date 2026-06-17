@@ -21,6 +21,12 @@ class FakeDocumentManager:
         self.number = number
         self.title = title
 
+    def sort_tasks(self) -> None:
+        """Ignore sort calls required by the document manager protocol."""
+
+    def update_task_status(self, number: int, status: str) -> None:
+        """Ignore status calls required by the document manager protocol."""
+
 
 class CreateTaskTest(TestCase):
     def test_create_task_updates_document_and_increments_number(self) -> None:

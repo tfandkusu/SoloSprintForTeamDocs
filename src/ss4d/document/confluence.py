@@ -2,15 +2,15 @@
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from datetime import date
-from html import escape
 from importlib import import_module
 from typing import Protocol, cast
 
 from ss4d.config import Config
-from ss4d.document.confluence_storage import split_h1_sections
-
-STORY_POINTS = 1
+from ss4d.document.confluence_html_builder import (
+    format_task_heading,
+    sort_storage_body,
+    update_storage_task_status,
+)
 
 
 class ConfluenceClient(Protocol):
@@ -71,6 +71,21 @@ class ConfluenceDocumentManager:
             minor_edit=False,
         )
 
+    def update_task_status(self, number: int, status: str) -> None:
+        """Update a task status in the configured Confluence page."""
+
+        page = self.client.get_page_by_id(
+            self.page_id,
+            expand="body.storage,version",
+        )
+        self.client.update_page(
+            self.page_id,
+            _extract_page_title(page),
+            update_storage_task_status(_extract_storage_body(page), number, status),
+            representation="storage",
+            minor_edit=False,
+        )
+
 
 def create_confluence_document_manager(config: Config) -> ConfluenceDocumentManager:
     """Create a Confluence document manager from configuration."""
@@ -95,34 +110,6 @@ def create_confluence_client(config: Config) -> ConfluenceClient:
             cloud=True,
         ),
     )
-
-
-def format_task_heading(
-    number: int, title: str, *, due_date: date | None = None
-) -> str:
-    """Format the Confluence storage h1 for a task."""
-
-    task_due_date = due_date or date.today()
-    return (
-        f"<h1>#{number}[{STORY_POINTS}]{escape(title)} "
-        f'<time datetime="{task_due_date.isoformat()}" /> '
-        '<ac:structured-macro ac:name="status" ac:schema-version="1">'
-        '<ac:parameter ac:name="colour">Grey</ac:parameter>'
-        '<ac:parameter ac:name="title">TODO</ac:parameter>'
-        "</ac:structured-macro>"
-        "</h1>"
-    )
-
-
-def sort_storage_body(body: str) -> str:
-    """Sort h1 sections in a Confluence storage body by status and due date."""
-
-    preamble, sections = split_h1_sections(body)
-    sorted_sections = sorted(
-        sections,
-        key=lambda section: (section.is_done, section.due_date or date.max),
-    )
-    return f"{preamble}{''.join(section.body for section in sorted_sections)}"
 
 
 def _append_storage_body(page: Mapping[str, object], heading: str) -> str:
