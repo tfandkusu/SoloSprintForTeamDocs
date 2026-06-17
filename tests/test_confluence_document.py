@@ -134,9 +134,9 @@ class ConfluenceDocumentManagerTest(TestCase):
         self.assertEqual(
             client.updated_body,
             "<p>Intro</p>"
-            '<h1>#1 Earlier <time datetime="2026-06-18" /></h1>'
+            '<h1>#1 Earlier <time datetime="2026-06-18"></time></h1>'
             "<p>Earlier body</p>"
-            '<h1>#2 Later <time datetime="2026-06-20" /></h1>'
+            '<h1>#2 Later <time datetime="2026-06-20"></time></h1>'
             "<p>Later body</p>",
         )
         self.assertEqual(client.representation, "storage")
@@ -184,7 +184,7 @@ class ConfluenceDocumentManagerTest(TestCase):
             '<ac:parameter ac:name="title">REVIEW</ac:parameter>'
             "</ac:structured-macro></h1>"
             "<p>First body</p>"
-            '<h1>#2[1]Second <time datetime="2026-06-19" /> '
+            '<h1>#2[1]Second <time datetime="2026-06-19"></time> '
             '<ac:structured-macro ac:name="status" ac:schema-version="1">'
             '<ac:parameter ac:name="colour">Blue</ac:parameter>'
             '<ac:parameter ac:name="title">PROGRESS</ac:parameter>'
@@ -209,9 +209,9 @@ class ConfluenceDocumentManagerTest(TestCase):
         self.assertEqual(
             sort_storage_body(body),
             "<p>Intro</p>\n"
-            '<h1>#1 Earlier <time datetime="2026-06-18" /></h1>\n'
+            '<h1>#1 Earlier <time datetime="2026-06-18"></time></h1>\n'
             "<p>Earlier body</p>\n"
-            '<h1>#2 Later <time datetime="2026-06-20" /></h1>\n'
+            '<h1>#2 Later <time datetime="2026-06-20"></time></h1>\n'
             "<p>Later body</p>\n"
             "<h1>#3 Missing date</h1>\n"
             "<p>Missing body</p>\n",
@@ -223,45 +223,39 @@ class ConfluenceDocumentManagerTest(TestCase):
         body = (
             "<p>Intro</p>\n"
             '<h1>#4 Done later <time datetime="2026-06-22" /> '
-            '<ac:structured-macro ac:name="status" ac:schema-version="1">'
-            '<ac:parameter ac:name="colour">Green</ac:parameter>'
-            '<ac:parameter ac:name="title">DONE</ac:parameter>'
-            "</ac:structured-macro></h1>\n"
+            f"{_status_macro('DONE')}</h1>\n"
             "<p>Done later body</p>\n"
-            '<h1>#1 Review soon <time datetime="2026-06-18" /> '
-            '<ac:structured-macro ac:name="status" ac:schema-version="1">'
-            '<ac:parameter ac:name="colour">Red</ac:parameter>'
-            '<ac:parameter ac:name="title">REVIEW</ac:parameter>'
-            "</ac:structured-macro></h1>\n"
-            "<p>Review soon body</p>\n"
+            "<h1>#3 Todo missing date "
+            f"{_status_macro('TODO')}</h1>\n"
+            "<p>Todo missing date body</p>\n"
             '<h1>#2 Done earlier <time datetime="2026-06-10" /> '
-            '<ac:structured-macro ac:name="status" ac:schema-version="1">'
-            '<ac:parameter ac:name="colour">Green</ac:parameter>'
-            '<ac:parameter ac:name="title">DONE</ac:parameter>'
-            "</ac:structured-macro></h1>\n"
+            f"{_status_macro('DONE')}</h1>\n"
             "<p>Done earlier body</p>\n"
+            '<h1>#1 Review soon <time datetime="2026-06-18" /> '
+            f"{_status_macro('REVIEW')}</h1>\n"
+            "<p>Review soon body</p>\n"
+            '<h1>#5 Todo later <time datetime="2026-06-20" /> '
+            f"{_status_macro('TODO')}</h1>\n"
+            "<p>Todo later body</p>\n"
         )
 
         self.assertEqual(
             sort_storage_body(body),
             "<p>Intro</p>\n"
-            '<h1>#1 Review soon <time datetime="2026-06-18" /> '
-            '<ac:structured-macro ac:name="status" ac:schema-version="1">'
-            '<ac:parameter ac:name="colour">Red</ac:parameter>'
-            '<ac:parameter ac:name="title">REVIEW</ac:parameter>'
-            "</ac:structured-macro></h1>\n"
+            '<h1>#1 Review soon <time datetime="2026-06-18"></time> '
+            f"{_status_macro('REVIEW')}</h1>\n"
             "<p>Review soon body</p>\n"
-            '<h1>#2 Done earlier <time datetime="2026-06-10" /> '
-            '<ac:structured-macro ac:name="status" ac:schema-version="1">'
-            '<ac:parameter ac:name="colour">Green</ac:parameter>'
-            '<ac:parameter ac:name="title">DONE</ac:parameter>'
-            "</ac:structured-macro></h1>\n"
+            '<h1>#5 Todo later <time datetime="2026-06-20"></time> '
+            f"{_status_macro('TODO')}</h1>\n"
+            "<p>Todo later body</p>\n"
+            "<h1>#3 Todo missing date "
+            f"{_status_macro('TODO')}</h1>\n"
+            "<p>Todo missing date body</p>\n"
+            '<h1>#2 Done earlier <time datetime="2026-06-10"></time> '
+            f"{_status_macro('DONE')}</h1>\n"
             "<p>Done earlier body</p>\n"
-            '<h1>#4 Done later <time datetime="2026-06-22" /> '
-            '<ac:structured-macro ac:name="status" ac:schema-version="1">'
-            '<ac:parameter ac:name="colour">Green</ac:parameter>'
-            '<ac:parameter ac:name="title">DONE</ac:parameter>'
-            "</ac:structured-macro></h1>\n"
+            '<h1>#4 Done later <time datetime="2026-06-22"></time> '
+            f"{_status_macro('DONE')}</h1>\n"
             "<p>Done later body</p>\n",
         )
 
@@ -290,7 +284,7 @@ class ConfluenceDocumentManagerTest(TestCase):
             '<ac:parameter ac:name="colour">Green</ac:parameter>'
             '<ac:parameter ac:name="title">DONE</ac:parameter>'
             "</ac:structured-macro></h1>"
-            '<h1>#10[1]Tenth <time datetime="2026-06-19" /> '
+            '<h1>#10[1]Tenth <time datetime="2026-06-19"></time> '
             '<ac:structured-macro ac:name="status" ac:schema-version="1">'
             '<ac:parameter ac:name="colour">Grey</ac:parameter>'
             '<ac:parameter ac:name="title">TODO</ac:parameter>'
@@ -319,3 +313,13 @@ class ConfluenceDocumentManagerTest(TestCase):
 
         with self.assertRaisesRegex(RuntimeError, "Task #2 was not found."):
             update_storage_task_status("<h1>#1[1]First</h1>", 2, "DONE")
+
+
+def _status_macro(status: str) -> str:
+    """Format a status macro fixture."""
+
+    return (
+        '<ac:structured-macro ac:name="status" ac:schema-version="1">'
+        f'<ac:parameter ac:name="title">{status}</ac:parameter>'
+        "</ac:structured-macro>"
+    )
