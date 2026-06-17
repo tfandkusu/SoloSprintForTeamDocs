@@ -5,6 +5,7 @@ import typer
 from ss4d.config import ConfigError
 from ss4d.process.create_task import create_task
 from ss4d.process.sort_tasks import sort_tasks
+from ss4d.process.update_task_due_date import update_task_due_date
 from ss4d.process.update_task_status import update_task_status
 
 app = typer.Typer(no_args_is_help=True)
@@ -63,7 +64,29 @@ def status(number: int, status_name: str) -> None:
     typer.echo(f"Updated task #{number} to {updated_status}")
 
 
+@app.command()
+def due(number: int, deadline: str) -> None:
+    """Update a task due date in Confluence."""
+
+    try:
+        due_date = update_task_due_date(number, deadline)
+    except ConfigError as error:
+        typer.echo(str(error), err=True)
+        raise typer.Exit(code=1) from error
+    except Exception as error:
+        typer.echo(f"Failed to update task due date: {error}", err=True)
+        raise typer.Exit(code=1) from error
+
+    typer.echo(f"Updated task #{number} due date to {due_date}")
+
+
 def main() -> None:
     """Run the Typer application."""
 
     app()
+
+
+def due_main() -> None:
+    """Run the due-date command as a standalone script."""
+
+    typer.run(due)

@@ -11,11 +11,13 @@ requires-python = ">=3.14,<3.15"
 dependencies = [
     "atlassian-python-api>=4.0",
     "beautifulsoup4>=4.15",
+    "dateparser>=1.2",
     "tomlkit>=0.13",
     "typer>=0.16",
 ]
 
 [project.scripts]
+due = "ss4d.main:due_main"
 ss4d = "ss4d.main:main"
 
 [dependency-groups]

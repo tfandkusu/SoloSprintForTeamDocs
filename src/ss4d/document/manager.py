@@ -18,3 +18,7 @@ class DocumentManager(Protocol):
     def update_task_status(self, number: int, status: str) -> None:
         """Update a task status in the configured document."""
         ...
+
+    def update_task_due_date(self, number: int, due_date: str) -> None:
+        """Update a task due date in the configured document."""
+        ...

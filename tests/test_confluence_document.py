@@ -6,6 +6,7 @@ from ss4d.document.confluence import ConfluenceDocumentManager
 from ss4d.document.confluence_html_builder import (
     format_task_heading,
     sort_storage_body,
+    update_storage_task_due_date,
     update_storage_task_status,
 )
 
@@ -193,6 +194,47 @@ class ConfluenceDocumentManagerTest(TestCase):
         self.assertEqual(client.representation, "storage")
         self.assertFalse(client.minor_edit)
 
+    def test_update_task_due_date_updates_configured_page_storage_body(self) -> None:
+        """Update a task due date in the configured Confluence page."""
+
+        client = FakeConfluenceClient(
+            page={
+                "title": "Sprint page",
+                "body": {
+                    "storage": {
+                        "value": (
+                            "<p>Intro</p>"
+                            '<h1>#1[1]First <time datetime="2026-06-18" /> '
+                            '<ac:structured-macro ac:name="status" ac:schema-version="1">'
+                            '<ac:parameter ac:name="colour">Grey</ac:parameter>'
+                            '<ac:parameter ac:name="title">TODO</ac:parameter>'
+                            "</ac:structured-macro></h1>"
+                            '<h1>#2[1]Second <time datetime="2026-06-19" /></h1>'
+                        )
+                    }
+                },
+            }
+        )
+        manager = ConfluenceDocumentManager(client=client, page_id="123")
+
+        manager.update_task_due_date(1, "2026-06-30")
+
+        self.assertEqual(client.page_id, "123")
+        self.assertEqual(client.expand, "body.storage,version")
+        self.assertEqual(client.updated_title, "Sprint page")
+        self.assertEqual(
+            client.updated_body,
+            "<p>Intro</p>"
+            '<h1>#1[1]First <time datetime="2026-06-30"></time> '
+            '<ac:structured-macro ac:name="status" ac:schema-version="1">'
+            '<ac:parameter ac:name="colour">Grey</ac:parameter>'
+            '<ac:parameter ac:name="title">TODO</ac:parameter>'
+            "</ac:structured-macro></h1>"
+            '<h1>#2[1]Second <time datetime="2026-06-19"></time></h1>',
+        )
+        self.assertEqual(client.representation, "storage")
+        self.assertFalse(client.minor_edit)
+
     def test_sort_storage_body_sorts_h1_sections_by_due_date(self) -> None:
         """Sort each h1-led section by nearest due date."""
 
@@ -313,6 +355,45 @@ class ConfluenceDocumentManagerTest(TestCase):
 
         with self.assertRaisesRegex(RuntimeError, "Task #2 was not found."):
             update_storage_task_status("<h1>#1[1]First</h1>", 2, "DONE")
+
+    def test_update_storage_task_due_date_replaces_matching_task_time(self) -> None:
+        """Replace only the matching task section due date."""
+
+        body = (
+            "<p>Intro</p>"
+            '<h1>#1[1]First <time datetime="2026-06-18" /> '
+            f"{_status_macro('TODO')}</h1>"
+            '<h1>#10[1]Tenth <time datetime="2026-06-19" /> '
+            f"{_status_macro('TODO')}</h1>"
+        )
+
+        self.assertEqual(
+            update_storage_task_due_date(body, 1, "2026-06-30"),
+            "<p>Intro</p>"
+            '<h1>#1[1]First <time datetime="2026-06-30"></time> '
+            f"{_status_macro('TODO')}</h1>"
+            '<h1>#10[1]Tenth <time datetime="2026-06-19"></time> '
+            f"{_status_macro('TODO')}</h1>",
+        )
+
+    def test_update_storage_task_due_date_inserts_missing_time(self) -> None:
+        """Insert a time tag before the status macro when the matching h1 has none."""
+
+        self.assertEqual(
+            update_storage_task_due_date(
+                f"<h1>#1[1]First {_status_macro('TODO')}</h1><p>Body</p>",
+                1,
+                "2026-06-30",
+            ),
+            '<h1>#1[1]First <time datetime="2026-06-30"></time> '
+            f"{_status_macro('TODO')}</h1><p>Body</p>",
+        )
+
+    def test_update_storage_task_due_date_rejects_missing_task(self) -> None:
+        """Reject due-date updates for a task number that is not in the body."""
+
+        with self.assertRaisesRegex(RuntimeError, "Task #2 was not found."):
+            update_storage_task_due_date("<h1>#1[1]First</h1>", 2, "2026-06-30")
 
 
 def _status_macro(status: str) -> str:

@@ -9,6 +9,7 @@ from ss4d.config import Config
 from ss4d.document.confluence_html_builder import (
     format_task_heading,
     sort_storage_body,
+    update_storage_task_due_date,
     update_storage_task_status,
 )
 
@@ -82,6 +83,21 @@ class ConfluenceDocumentManager:
             self.page_id,
             _extract_page_title(page),
             update_storage_task_status(_extract_storage_body(page), number, status),
+            representation="storage",
+            minor_edit=False,
+        )
+
+    def update_task_due_date(self, number: int, due_date: str) -> None:
+        """Update a task due date in the configured Confluence page."""
+
+        page = self.client.get_page_by_id(
+            self.page_id,
+            expand="body.storage,version",
+        )
+        self.client.update_page(
+            self.page_id,
+            _extract_page_title(page),
+            update_storage_task_due_date(_extract_storage_body(page), number, due_date),
             representation="storage",
             minor_edit=False,
         )

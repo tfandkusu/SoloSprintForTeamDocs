@@ -75,6 +75,25 @@ def update_storage_task_status(body: str, number: int, status: str) -> str:
     raise RuntimeError(f"Task #{number} was not found.")
 
 
+def update_storage_task_due_date(body: str, number: int, due_date: str) -> str:
+    """Update the time tag for a task h1 section in an HTML body."""
+
+    preamble, sections = split_h1_sections(body)
+
+    for index, section in enumerate(sections):
+        if section.number != number:
+            continue
+
+        updated_section = replace_section_due_date(section.body, due_date)
+        updated_sections = [
+            other.body if section_index != index else updated_section
+            for section_index, other in enumerate(sections)
+        ]
+        return f"{preamble}{''.join(updated_sections)}"
+
+    raise RuntimeError(f"Task #{number} was not found.")
+
+
 def replace_section_status(section_body: str, status_macro: str) -> str:
     """Replace the first status macro in a section, or insert one in its h1."""
 
@@ -94,6 +113,40 @@ def replace_section_status(section_body: str, status_macro: str) -> str:
 
     h1.append(" ")
     h1.append(status_macro_tag)
+    return str(soup)
+
+
+def replace_section_due_date(section_body: str, due_date: str) -> str:
+    """Replace the first time tag in a section, or insert one in its h1."""
+
+    soup = BeautifulSoup(section_body, "html.parser")
+    h1 = soup.find("h1")
+    if not isinstance(h1, Tag):
+        raise RuntimeError("Task section did not include an h1 tag.")
+
+    due_date_tag = BeautifulSoup(
+        f'<time datetime="{escape(due_date)}" />',
+        "html.parser",
+    ).find("time")
+    if not isinstance(due_date_tag, Tag):
+        raise RuntimeError("Due date fragment did not include a time tag.")
+
+    current_due_date = h1.find("time")
+    if isinstance(current_due_date, Tag):
+        current_due_date.replace_with(due_date_tag)
+        return str(soup)
+
+    status_macro = h1.find(
+        "ac:structured-macro",
+        attrs={"ac:name": "status"},
+    )
+    if isinstance(status_macro, Tag):
+        status_macro.insert_before(due_date_tag)
+        status_macro.insert_before(" ")
+        return str(soup)
+
+    h1.append(" ")
+    h1.append(due_date_tag)
     return str(soup)
 
 

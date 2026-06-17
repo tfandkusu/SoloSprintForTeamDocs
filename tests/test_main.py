@@ -63,3 +63,34 @@ class MainTest(TestCase):
             "Failed to update task status: "
             "Status must be one of: TODO, PROGRESS, REVIEW, DONE.\n",
         )
+
+    def test_due_outputs_updated_task_due_date(self) -> None:
+        """Output a due-date update completion message on success."""
+
+        runner = CliRunner()
+
+        with patch(
+            "ss4d.main.update_task_due_date", return_value="2026-06-30"
+        ) as update_task_due_date:
+            result = runner.invoke(app, ["due", "7", "next Tuesday"])
+
+        update_task_due_date.assert_called_once_with(7, "next Tuesday")
+        self.assertEqual(result.exit_code, 0)
+        self.assertEqual(result.output, "Updated task #7 due date to 2026-06-30\n")
+
+    def test_due_outputs_error_when_update_fails(self) -> None:
+        """Output a due-date update error when the process fails."""
+
+        runner = CliRunner()
+
+        with patch(
+            "ss4d.main.update_task_due_date",
+            side_effect=ValueError("Could not parse deadline: someday"),
+        ):
+            result = runner.invoke(app, ["due", "7", "someday"])
+
+        self.assertEqual(result.exit_code, 1)
+        self.assertEqual(
+            result.stderr,
+            "Failed to update task due date: Could not parse deadline: someday\n",
+        )
