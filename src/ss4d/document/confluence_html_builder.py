@@ -6,7 +6,7 @@ from html import escape
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 
-from ss4d.document.confluence_html_parser import split_h1_sections
+from ss4d.document.confluence_html_parser import parse_status_macro, split_h1_sections
 
 STORY_POINTS = 1
 STATUS_COLOURS = {
@@ -83,7 +83,7 @@ def replace_section_status(section_body: str, status_macro: str) -> str:
     if not isinstance(h1, Tag):
         raise RuntimeError("Task section did not include an h1 tag.")
 
-    status_macro_tag = _parse_status_macro(status_macro)
+    status_macro_tag = parse_status_macro(status_macro)
     current_status_macro = h1.find(
         "ac:structured-macro",
         attrs={"ac:name": "status"},
@@ -105,13 +105,3 @@ def normalize_task_status(status: str) -> str:
         allowed_statuses = ", ".join(STATUS_COLOURS)
         raise ValueError(f"Status must be one of: {allowed_statuses}.")
     return status_name
-
-
-def _parse_status_macro(status_macro: str) -> Tag:
-    """Parse a status macro fragment into a BeautifulSoup tag."""
-
-    soup = BeautifulSoup(status_macro, "html.parser")
-    macro = soup.find("ac:structured-macro", attrs={"ac:name": "status"})
-    if not isinstance(macro, Tag):
-        raise RuntimeError("Status macro fragment did not include a status macro.")
-    return macro

@@ -84,6 +84,16 @@ def _extract_task_number(h1: Tag) -> int | None:
     return int(match.group(1))
 
 
+def parse_status_macro(status_macro: str) -> Tag:
+    """Parse a status macro fragment into a BeautifulSoup tag."""
+
+    soup = BeautifulSoup(status_macro, "html.parser")
+    macro = soup.find("ac:structured-macro", attrs={"ac:name": "status"})
+    if not isinstance(macro, Tag):
+        raise RuntimeError("Status macro fragment did not include a status macro.")
+    return macro
+
+
 def _is_tag(element: PageElement, name: str) -> bool:
     """Return whether the element is a tag with the given name."""
 
