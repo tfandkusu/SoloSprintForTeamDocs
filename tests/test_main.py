@@ -35,7 +35,9 @@ class MainTest(TestCase):
 
         runner = CliRunner()
 
-        with patch("ss4d.main.update_task_status", return_value="DONE") as update_task_status:
+        with patch(
+            "ss4d.main.update_task_status", return_value="DONE"
+        ) as update_task_status:
             result = runner.invoke(app, ["status", "7", "done"])
 
         update_task_status.assert_called_once_with(7, "done")
@@ -49,7 +51,9 @@ class MainTest(TestCase):
 
         with patch(
             "ss4d.main.update_task_status",
-            side_effect=ValueError("Status must be one of: TODO, PROGRESS, REVIEW, DONE."),
+            side_effect=ValueError(
+                "Status must be one of: TODO, PROGRESS, REVIEW, DONE."
+            ),
         ):
             result = runner.invoke(app, ["status", "7", "blocked"])
 
