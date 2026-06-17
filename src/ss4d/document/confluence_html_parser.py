@@ -84,38 +84,6 @@ def _extract_task_number(h1: Tag) -> int | None:
     return int(match.group(1))
 
 
-def replace_section_status(section_body: str, status_macro: str) -> str:
-    """Replace the first status macro in a section, or insert one in its h1."""
-
-    soup = BeautifulSoup(section_body, "html.parser")
-    h1 = soup.find("h1")
-    if not isinstance(h1, Tag):
-        raise RuntimeError("Task section did not include an h1 tag.")
-
-    status_macro_tag = _parse_status_macro(status_macro)
-    current_status_macro = h1.find(
-        "ac:structured-macro",
-        attrs={"ac:name": "status"},
-    )
-    if isinstance(current_status_macro, Tag):
-        current_status_macro.replace_with(status_macro_tag)
-        return str(soup)
-
-    h1.append(" ")
-    h1.append(status_macro_tag)
-    return str(soup)
-
-
-def _parse_status_macro(status_macro: str) -> Tag:
-    """Parse a status macro fragment into a BeautifulSoup tag."""
-
-    soup = BeautifulSoup(status_macro, "html.parser")
-    macro = soup.find("ac:structured-macro", attrs={"ac:name": "status"})
-    if not isinstance(macro, Tag):
-        raise RuntimeError("Status macro fragment did not include a status macro.")
-    return macro
-
-
 def _is_tag(element: PageElement, name: str) -> bool:
     """Return whether the element is a tag with the given name."""
 

@@ -3,10 +3,10 @@
 from datetime import date
 from html import escape
 
-from ss4d.document.confluence_html_parser import (
-    replace_section_status,
-    split_h1_sections,
-)
+from bs4 import BeautifulSoup
+from bs4.element import Tag
+
+from ss4d.document.confluence_html_parser import split_h1_sections
 
 STORY_POINTS = 1
 STATUS_COLOURS = {
@@ -75,6 +75,28 @@ def update_storage_task_status(body: str, number: int, status: str) -> str:
     raise RuntimeError(f"Task #{number} was not found.")
 
 
+def replace_section_status(section_body: str, status_macro: str) -> str:
+    """Replace the first status macro in a section, or insert one in its h1."""
+
+    soup = BeautifulSoup(section_body, "html.parser")
+    h1 = soup.find("h1")
+    if not isinstance(h1, Tag):
+        raise RuntimeError("Task section did not include an h1 tag.")
+
+    status_macro_tag = _parse_status_macro(status_macro)
+    current_status_macro = h1.find(
+        "ac:structured-macro",
+        attrs={"ac:name": "status"},
+    )
+    if isinstance(current_status_macro, Tag):
+        current_status_macro.replace_with(status_macro_tag)
+        return str(soup)
+
+    h1.append(" ")
+    h1.append(status_macro_tag)
+    return str(soup)
+
+
 def normalize_task_status(status: str) -> str:
     """Return a supported uppercase status name."""
 
@@ -83,3 +105,13 @@ def normalize_task_status(status: str) -> str:
         allowed_statuses = ", ".join(STATUS_COLOURS)
         raise ValueError(f"Status must be one of: {allowed_statuses}.")
     return status_name
+
+
+def _parse_status_macro(status_macro: str) -> Tag:
+    """Parse a status macro fragment into a BeautifulSoup tag."""
+
+    soup = BeautifulSoup(status_macro, "html.parser")
+    macro = soup.find("ac:structured-macro", attrs={"ac:name": "status"})
+    if not isinstance(macro, Tag):
+        raise RuntimeError("Status macro fragment did not include a status macro.")
+    return macro
