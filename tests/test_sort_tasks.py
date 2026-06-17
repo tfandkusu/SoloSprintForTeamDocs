@@ -25,6 +25,9 @@ class FakeDocumentManager:
     def update_task_status(self, number: int, status: str) -> None:
         """Ignore status calls required by the document manager protocol."""
 
+    def update_task_due_date(self, number: int, due_date: str) -> None:
+        """Ignore due-date calls required by the document manager protocol."""
+
 
 class SortTasksTest(TestCase):
     def test_sort_tasks_updates_document(self) -> None:
