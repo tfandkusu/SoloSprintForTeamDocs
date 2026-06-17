@@ -84,9 +84,3 @@ def main() -> None:
     """Run the Typer application."""
 
     app()
-
-
-def due_main() -> None:
-    """Run the due-date command as a standalone script."""
-
-    typer.run(due)

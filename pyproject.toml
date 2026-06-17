@@ -17,7 +17,6 @@ dependencies = [
 ]
 
 [project.scripts]
-due = "ss4d.main:due_main"
 ss4d = "ss4d.main:main"
 
 [dependency-groups]
