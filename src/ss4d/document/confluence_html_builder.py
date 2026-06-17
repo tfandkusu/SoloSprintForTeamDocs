@@ -3,6 +3,11 @@
 from datetime import date
 from html import escape
 
+from ss4d.document.confluence_html_parser import (
+    replace_section_status,
+    split_h1_sections,
+)
+
 STORY_POINTS = 1
 STATUS_COLOURS = {
     "TODO": "Grey",
@@ -37,6 +42,37 @@ def format_status_macro(status: str) -> str:
         f'<ac:parameter ac:name="title">{status_name}</ac:parameter>'
         "</ac:structured-macro>"
     )
+
+
+def sort_storage_body(body: str) -> str:
+    """Sort h1 sections in a Confluence HTML body by status and due date."""
+
+    preamble, sections = split_h1_sections(body)
+    sorted_sections = sorted(
+        sections,
+        key=lambda section: (section.is_done, section.due_date or date.max),
+    )
+    return f"{preamble}{''.join(section.body for section in sorted_sections)}"
+
+
+def update_storage_task_status(body: str, number: int, status: str) -> str:
+    """Update the status macro for a task h1 section in an HTML body."""
+
+    status_macro = format_status_macro(status)
+    preamble, sections = split_h1_sections(body)
+
+    for index, section in enumerate(sections):
+        if section.number != number:
+            continue
+
+        updated_section = replace_section_status(section.body, status_macro)
+        updated_sections = [
+            other.body if section_index != index else updated_section
+            for section_index, other in enumerate(sections)
+        ]
+        return f"{preamble}{''.join(updated_sections)}"
+
+    raise RuntimeError(f"Task #{number} was not found.")
 
 
 def normalize_task_status(status: str) -> str:

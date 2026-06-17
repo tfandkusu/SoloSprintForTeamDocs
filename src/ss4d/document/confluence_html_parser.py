@@ -1,54 +1,12 @@
 """Confluence HTML body parser and serializer."""
 
 import re
-from dataclasses import dataclass
 from datetime import date
 
 from bs4 import BeautifulSoup
 from bs4.element import PageElement, Tag
 
-from ss4d.document.confluence_html_builder import format_status_macro
-
-
-@dataclass(frozen=True)
-class H1Section:
-    """An h1-led section from a Confluence HTML body."""
-
-    body: str
-    due_date: date | None
-    is_done: bool
-    number: int | None
-
-
-def sort_storage_body(body: str) -> str:
-    """Sort h1 sections in a Confluence HTML body by status and due date."""
-
-    preamble, sections = split_h1_sections(body)
-    sorted_sections = sorted(
-        sections,
-        key=lambda section: (section.is_done, section.due_date or date.max),
-    )
-    return f"{preamble}{''.join(section.body for section in sorted_sections)}"
-
-
-def update_storage_task_status(body: str, number: int, status: str) -> str:
-    """Update the status macro for a task h1 section in an HTML body."""
-
-    status_macro = format_status_macro(status)
-    preamble, sections = split_h1_sections(body)
-
-    for index, section in enumerate(sections):
-        if section.number != number:
-            continue
-
-        updated_section = _replace_section_status(section.body, status_macro)
-        updated_sections = [
-            other.body if section_index != index else updated_section
-            for section_index, other in enumerate(sections)
-        ]
-        return f"{preamble}{''.join(updated_sections)}"
-
-    raise RuntimeError(f"Task #{number} was not found.")
+from ss4d.document.confluence_h1_section import H1Section
 
 
 def split_h1_sections(body: str) -> tuple[str, list[H1Section]]:
@@ -126,7 +84,7 @@ def _extract_task_number(h1: Tag) -> int | None:
     return int(match.group(1))
 
 
-def _replace_section_status(section_body: str, status_macro: str) -> str:
+def replace_section_status(section_body: str, status_macro: str) -> str:
     """Replace the first status macro in a section, or insert one in its h1."""
 
     soup = BeautifulSoup(section_body, "html.parser")
