@@ -17,7 +17,7 @@ class DocumentManager(Protocol):
         """Read all tasks from the configured document."""
         ...
 
-    def overwrite_tasks(self, tasks: list[Task]) -> None:
+    def write_tasks(self, tasks: list[Task]) -> None:
         """Overwrite the configured document with the supplied tasks."""
         ...
 

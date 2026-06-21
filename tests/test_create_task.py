@@ -32,7 +32,7 @@ class FakeDocumentManager:
 
         return self.tasks.copy()
 
-    def overwrite_tasks(self, tasks: list[Task]) -> None:
+    def write_tasks(self, tasks: list[Task]) -> None:
         """Record replacement tasks or raise the configured failure."""
 
         if self.should_fail:

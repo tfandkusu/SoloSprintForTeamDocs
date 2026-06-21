@@ -36,7 +36,7 @@ def create_task(
             body="",
         ),
     )
-    document_manager.overwrite_tasks(tasks)
+    document_manager.write_tasks(tasks)
 
     increment_number(config_path)
     return task_number

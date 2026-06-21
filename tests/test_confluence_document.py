@@ -92,13 +92,13 @@ class ConfluenceDocumentManagerTest(TestCase):
             ],
         )
 
-    def test_overwrite_tasks_replaces_document_from_domain_models(self) -> None:
+    def test_write_tasks_replaces_document_from_domain_models(self) -> None:
         """Replace the complete document using supplied task models."""
 
         client = FakeConfluenceClient()
         manager = ConfluenceDocumentManager(client=client, page_id="123")
 
-        manager.overwrite_tasks(
+        manager.write_tasks(
             [
                 Task(
                     id=1,

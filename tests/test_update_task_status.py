@@ -22,7 +22,7 @@ class FakeDocumentManager:
 
         return []
 
-    def overwrite_tasks(self, tasks: list[Task]) -> None:
+    def write_tasks(self, tasks: list[Task]) -> None:
         """Ignore overwrite calls required by the document manager protocol."""
 
     def sort_tasks(self) -> None:

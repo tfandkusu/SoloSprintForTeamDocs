@@ -69,7 +69,7 @@ class ConfluenceDocumentManager:
         )
         return parse_storage_tasks(_extract_storage_body(page))
 
-    def overwrite_tasks(self, tasks: list[Task]) -> None:
+    def write_tasks(self, tasks: list[Task]) -> None:
         """Overwrite the configured Confluence page with supplied tasks."""
 
         page = self.client.get_page_by_id(
