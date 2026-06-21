@@ -2,16 +2,8 @@
 
 from dataclasses import dataclass
 from datetime import date
-from enum import StrEnum
 
-
-class TaskStatus(StrEnum):
-    """Supported workflow statuses for a task."""
-
-    TODO = "todo"
-    PROGRESS = "progress"
-    REVIEW = "review"
-    DONE = "done"
+from ss4d.model.task_status import TaskStatus
 
 
 @dataclass(frozen=True)
