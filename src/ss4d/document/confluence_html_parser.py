@@ -33,8 +33,8 @@ def _parse_task(section_body: str) -> Task:
     status_name = _extract_status(h1).lower() or TaskStatus.TODO.value
     try:
         status = TaskStatus(status_name)
-    except ValueError as error:
-        raise RuntimeError(f"Unsupported task status: {status_name}.") from error
+    except ValueError:
+        status = TaskStatus.TODO
 
     heading = BeautifulSoup(str(h1), "html.parser").find("h1")
     if not isinstance(heading, Tag):

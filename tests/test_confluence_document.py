@@ -135,6 +135,25 @@ class ConfluenceDocumentManagerTest(TestCase):
 
         self.assertEqual(parse_storage_tasks(format_storage_tasks(tasks)), tasks)
 
+    def test_read_tasks_defaults_unknown_status_to_todo(self) -> None:
+        """Treat unsupported document status names as todo tasks."""
+
+        client = FakeConfluenceClient(
+            page={
+                "title": "Sprint page",
+                "body": {
+                    "storage": {
+                        "value": (
+                            f"<h1>#1[1]Blocked task {_status_macro('BLOCKED')}</h1>"
+                        )
+                    }
+                },
+            }
+        )
+        manager = ConfluenceDocumentManager(client=client, page_id="123")
+
+        self.assertEqual(manager.read_tasks()[0].status, TaskStatus.TODO)
+
 
 def _status_macro(status: str) -> str:
     """Format a status macro fixture."""
