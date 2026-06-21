@@ -1,7 +1,8 @@
 """Update-task-due-date process."""
 
 from collections.abc import Callable
-from datetime import datetime
+from dataclasses import replace
+from datetime import date, datetime
 from importlib import import_module
 from pathlib import Path
 from typing import cast
@@ -28,8 +29,14 @@ def update_task_due_date(
     if document_manager is None:
         document_manager = create_confluence_document_manager(config)
 
-    document_manager.update_task_due_date(number, due_date)
-    return due_date
+    tasks = document_manager.read_tasks()
+    for index, task in enumerate(tasks):
+        if task.id == number:
+            tasks[index] = replace(task, due_date=date.fromisoformat(due_date))
+            document_manager.write_tasks(tasks)
+            return due_date
+
+    raise RuntimeError(f"Task #{number} was not found.")
 
 
 def parse_deadline(deadline: str) -> str:

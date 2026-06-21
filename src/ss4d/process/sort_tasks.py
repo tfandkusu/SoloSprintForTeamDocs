@@ -1,10 +1,12 @@
 """Sort-task process."""
 
+from datetime import date
 from pathlib import Path
 
 from ss4d.config import CONFIG_PATH, load_config
 from ss4d.document.confluence import create_confluence_document_manager
 from ss4d.document.manager import DocumentManager
+from ss4d.model.task_status import TaskStatus
 
 
 def sort_tasks(
@@ -19,4 +21,11 @@ def sort_tasks(
     if document_manager is None:
         document_manager = create_confluence_document_manager(config)
 
-    document_manager.sort_tasks()
+    tasks = document_manager.read_tasks()
+    tasks.sort(
+        key=lambda task: (
+            task.status == TaskStatus.DONE,
+            task.due_date or date.max,
+        )
+    )
+    document_manager.write_tasks(tasks)
