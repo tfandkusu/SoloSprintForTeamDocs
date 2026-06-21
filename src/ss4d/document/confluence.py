@@ -6,13 +6,7 @@ from importlib import import_module
 from typing import Protocol, cast
 
 from ss4d.config import Config
-from ss4d.document.confluence_html_builder import (
-    format_storage_tasks,
-    format_task_heading,
-    sort_storage_body,
-    update_storage_task_due_date,
-    update_storage_task_status,
-)
+from ss4d.document.confluence_html_builder import format_storage_tasks
 from ss4d.document.confluence_html_parser import parse_storage_tasks
 from ss4d.model.task import Task
 
@@ -44,22 +38,6 @@ class ConfluenceDocumentManager:
     client: ConfluenceClient
     page_id: str
 
-    def append_task(self, number: int, title: str) -> None:
-        """Append a task heading to the configured Confluence page."""
-
-        heading = format_task_heading(number, title)
-        page = self.client.get_page_by_id(
-            self.page_id,
-            expand="body.storage,version",
-        )
-        self.client.update_page(
-            self.page_id,
-            _extract_page_title(page),
-            _append_storage_body(page, heading),
-            representation="storage",
-            minor_edit=False,
-        )
-
     def read_tasks(self) -> list[Task]:
         """Read all tasks from the configured Confluence page."""
 
@@ -80,51 +58,6 @@ class ConfluenceDocumentManager:
             self.page_id,
             _extract_page_title(page),
             format_storage_tasks(tasks),
-            representation="storage",
-            minor_edit=False,
-        )
-
-    def sort_tasks(self) -> None:
-        """Sort task sections in the configured Confluence page."""
-
-        page = self.client.get_page_by_id(
-            self.page_id,
-            expand="body.storage,version",
-        )
-        self.client.update_page(
-            self.page_id,
-            _extract_page_title(page),
-            sort_storage_body(_extract_storage_body(page)),
-            representation="storage",
-            minor_edit=False,
-        )
-
-    def update_task_status(self, number: int, status: str) -> None:
-        """Update a task status in the configured Confluence page."""
-
-        page = self.client.get_page_by_id(
-            self.page_id,
-            expand="body.storage,version",
-        )
-        self.client.update_page(
-            self.page_id,
-            _extract_page_title(page),
-            update_storage_task_status(_extract_storage_body(page), number, status),
-            representation="storage",
-            minor_edit=False,
-        )
-
-    def update_task_due_date(self, number: int, due_date: str) -> None:
-        """Update a task due date in the configured Confluence page."""
-
-        page = self.client.get_page_by_id(
-            self.page_id,
-            expand="body.storage,version",
-        )
-        self.client.update_page(
-            self.page_id,
-            _extract_page_title(page),
-            update_storage_task_due_date(_extract_storage_body(page), number, due_date),
             representation="storage",
             minor_edit=False,
         )
@@ -153,13 +86,6 @@ def create_confluence_client(config: Config) -> ConfluenceClient:
             cloud=True,
         ),
     )
-
-
-def _append_storage_body(page: Mapping[str, object], heading: str) -> str:
-    """Append a heading to the page storage body."""
-
-    current_body = _extract_storage_body(page)
-    return f"{current_body}{heading}"
 
 
 def _extract_page_title(page: Mapping[str, object]) -> str:

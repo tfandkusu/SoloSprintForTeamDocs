@@ -24,9 +24,6 @@ class FakeDocumentManager:
             )
         ]
 
-    def append_task(self, number: int, title: str) -> None:
-        """Record the task or raise the configured failure."""
-
     def read_tasks(self) -> list[Task]:
         """Return the configured tasks."""
 
@@ -38,15 +35,6 @@ class FakeDocumentManager:
         if self.should_fail:
             raise RuntimeError("Document update failed")
         self.tasks = tasks
-
-    def sort_tasks(self) -> None:
-        """Ignore sort calls required by the document manager protocol."""
-
-    def update_task_status(self, number: int, status: str) -> None:
-        """Ignore status calls required by the document manager protocol."""
-
-    def update_task_due_date(self, number: int, due_date: str) -> None:
-        """Ignore due-date calls required by the document manager protocol."""
 
 
 class CreateTaskTest(TestCase):
