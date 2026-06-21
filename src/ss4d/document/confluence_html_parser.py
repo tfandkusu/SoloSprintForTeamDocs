@@ -6,7 +6,6 @@ from datetime import date
 from bs4 import BeautifulSoup
 from bs4.element import PageElement, Tag
 
-from ss4d.document.confluence_h1_section import H1Section
 from ss4d.model.task import Task
 from ss4d.model.task_status import TaskStatus
 
@@ -14,8 +13,7 @@ from ss4d.model.task_status import TaskStatus
 def parse_storage_tasks(body: str) -> list[Task]:
     """Parse task sections from a Confluence storage-format body."""
 
-    _, sections = split_h1_sections(body)
-    return [_parse_task(section.body) for section in sections]
+    return [_parse_task(section) for section in _split_h1_sections(body)]
 
 
 def _parse_task(section_body: str) -> Task:
@@ -58,8 +56,8 @@ def _parse_task(section_body: str) -> Task:
     )
 
 
-def split_h1_sections(body: str) -> tuple[str, list[H1Section]]:
-    """Split an HTML body into a preamble and h1-led sections."""
+def _split_h1_sections(body: str) -> list[str]:
+    """Split an HTML body into h1-led section strings."""
 
     soup = BeautifulSoup(body, "html.parser")
     contents = list(soup.contents)
@@ -67,30 +65,10 @@ def split_h1_sections(body: str) -> tuple[str, list[H1Section]]:
         index for index, element in enumerate(contents) if _is_tag(element, "h1")
     ]
 
-    if len(h1_indexes) == 0:
-        return str(soup), []
-
-    preamble = _serialize(contents[: h1_indexes[0]])
-    sections = [
-        _create_section(contents[start:end])
+    return [
+        _serialize(contents[start:end])
         for start, end in zip(h1_indexes, [*h1_indexes[1:], len(contents)])
     ]
-    return preamble, sections
-
-
-def _create_section(elements: list[PageElement]) -> H1Section:
-    """Create a sortable h1-led section from parsed elements."""
-
-    h1 = elements[0]
-    if not isinstance(h1, Tag):
-        raise RuntimeError("Task section did not start with an h1 tag.")
-
-    return H1Section(
-        body=_serialize(elements),
-        due_date=_extract_due_date(h1),
-        is_done=_extract_status(h1).upper() == "DONE",
-        number=_extract_task_number(h1),
-    )
 
 
 def _extract_due_date(h1: Tag) -> date | None:
