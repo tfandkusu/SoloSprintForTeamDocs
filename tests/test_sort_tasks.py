@@ -2,6 +2,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 
+from ss4d.model.task import Task
 from ss4d.process.sort_tasks import sort_tasks
 
 
@@ -14,6 +15,14 @@ class FakeDocumentManager:
 
     def append_task(self, number: int, title: str) -> None:
         """Ignore append calls required by the document manager protocol."""
+
+    def read_tasks(self) -> list[Task]:
+        """Return no tasks for protocol compatibility."""
+
+        return []
+
+    def overwrite_tasks(self, tasks: list[Task]) -> None:
+        """Ignore overwrite calls required by the document manager protocol."""
 
     def sort_tasks(self) -> None:
         """Record the sort request or raise the configured failure."""

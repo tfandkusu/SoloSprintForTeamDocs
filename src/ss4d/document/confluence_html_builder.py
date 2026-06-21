@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup
 from bs4.element import Tag
 
 from ss4d.document.confluence_html_parser import parse_status_macro, split_h1_sections
+from ss4d.model.task import Task
 
 STORY_POINTS = 1
 STATUS_COLOURS = {
@@ -28,6 +29,26 @@ def format_task_heading(
         f'<time datetime="{task_due_date.isoformat()}" /> '
         f"{format_status_macro('TODO')}"
         "</h1>"
+    )
+
+
+def format_storage_tasks(tasks: list[Task]) -> str:
+    """Serialize tasks into a Confluence storage-format body."""
+
+    return "".join(f"{_format_task(task)}{task.body}" for task in tasks)
+
+
+def _format_task(task: Task) -> str:
+    """Format one task heading using every domain-model field."""
+
+    due_date = (
+        f' <time datetime="{task.due_date.isoformat()}" />'
+        if task.due_date is not None
+        else ""
+    )
+    return (
+        f"<h1>#{task.id}[{task.points}]{escape(task.title)}"
+        f"{due_date} {format_status_macro(task.status.value)}</h1>"
     )
 
 

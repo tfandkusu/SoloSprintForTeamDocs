@@ -1,7 +1,10 @@
+from datetime import date
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 
+from ss4d.model.task import Task
+from ss4d.model.task_status import TaskStatus
 from ss4d.process.create_task import create_task
 
 
@@ -10,16 +13,31 @@ class FakeDocumentManager:
         """Create a fake document manager for create-task tests."""
 
         self.should_fail = should_fail
-        self.number: int | None = None
-        self.title: str | None = None
+        self.tasks = [
+            Task(
+                id=2,
+                title="Existing",
+                points=3,
+                due_date=None,
+                status=TaskStatus.PROGRESS,
+                body="<p>Existing body</p>",
+            )
+        ]
 
     def append_task(self, number: int, title: str) -> None:
         """Record the task or raise the configured failure."""
 
+    def read_tasks(self) -> list[Task]:
+        """Return the configured tasks."""
+
+        return self.tasks.copy()
+
+    def overwrite_tasks(self, tasks: list[Task]) -> None:
+        """Record replacement tasks or raise the configured failure."""
+
         if self.should_fail:
             raise RuntimeError("Document update failed")
-        self.number = number
-        self.title = title
+        self.tasks = tasks
 
     def sort_tasks(self) -> None:
         """Ignore sort calls required by the document manager protocol."""
@@ -46,8 +64,27 @@ class CreateTaskTest(TestCase):
             )
 
             self.assertEqual(task_number, 1)
-            self.assertEqual(document_manager.number, 1)
-            self.assertEqual(document_manager.title, "CI setup")
+            self.assertEqual(
+                document_manager.tasks,
+                [
+                    Task(
+                        id=1,
+                        title="CI setup",
+                        points=1,
+                        due_date=date.today(),
+                        status=TaskStatus.TODO,
+                        body="",
+                    ),
+                    Task(
+                        id=2,
+                        title="Existing",
+                        points=3,
+                        due_date=None,
+                        status=TaskStatus.PROGRESS,
+                        body="<p>Existing body</p>",
+                    ),
+                ],
+            )
             self.assertIn("number = 2", config_path.read_text(encoding="utf-8"))
 
     def test_failed_document_update_does_not_increment_number(self) -> None:

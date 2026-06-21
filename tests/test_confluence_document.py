@@ -4,11 +4,15 @@ from unittest import TestCase
 
 from ss4d.document.confluence import ConfluenceDocumentManager
 from ss4d.document.confluence_html_builder import (
+    format_storage_tasks,
     format_task_heading,
     sort_storage_body,
     update_storage_task_due_date,
     update_storage_task_status,
 )
+from ss4d.document.confluence_html_parser import parse_storage_tasks
+from ss4d.model.task import Task
+from ss4d.model.task_status import TaskStatus
 
 
 class FakeConfluenceClient:
@@ -53,6 +57,85 @@ class FakeConfluenceClient:
 
 
 class ConfluenceDocumentManagerTest(TestCase):
+    def test_read_tasks_converts_document_to_domain_models(self) -> None:
+        """Read every document task including its free-form HTML body."""
+
+        client = FakeConfluenceClient(
+            page={
+                "title": "Sprint page",
+                "body": {
+                    "storage": {
+                        "value": (
+                            "<p>Intro is not a task</p>"
+                            "<h1>#2[3]Deploy &amp; verify "
+                            '<time datetime="2026-06-30" /> '
+                            f"{_status_macro('PROGRESS')}</h1>"
+                            "<p>Keep this body</p>"
+                        )
+                    }
+                },
+            }
+        )
+        manager = ConfluenceDocumentManager(client=client, page_id="123")
+
+        self.assertEqual(
+            manager.read_tasks(),
+            [
+                Task(
+                    id=2,
+                    title="Deploy & verify",
+                    points=3,
+                    due_date=date(2026, 6, 30),
+                    status=TaskStatus.PROGRESS,
+                    body="<p>Keep this body</p>",
+                )
+            ],
+        )
+
+    def test_overwrite_tasks_replaces_document_from_domain_models(self) -> None:
+        """Replace the complete document using supplied task models."""
+
+        client = FakeConfluenceClient()
+        manager = ConfluenceDocumentManager(client=client, page_id="123")
+
+        manager.overwrite_tasks(
+            [
+                Task(
+                    id=1,
+                    title="CI & deploy",
+                    points=2,
+                    due_date=None,
+                    status=TaskStatus.REVIEW,
+                    body="<p>Task body</p>",
+                )
+            ]
+        )
+
+        self.assertEqual(
+            client.updated_body,
+            "<h1>#1[2]CI &amp; deploy "
+            '<ac:structured-macro ac:name="status" ac:schema-version="1">'
+            '<ac:parameter ac:name="colour">Red</ac:parameter>'
+            '<ac:parameter ac:name="title">REVIEW</ac:parameter>'
+            "</ac:structured-macro></h1><p>Task body</p>",
+        )
+
+    def test_storage_tasks_round_trip_all_domain_fields(self) -> None:
+        """Round-trip supported task fields through Confluence storage HTML."""
+
+        tasks = [
+            Task(
+                id=7,
+                title="Escaped <title>",
+                points=5,
+                due_date=date(2026, 7, 1),
+                status=TaskStatus.DONE,
+                body="<p><strong>Finished</strong></p>",
+            )
+        ]
+
+        self.assertEqual(parse_storage_tasks(format_storage_tasks(tasks)), tasks)
+
     def test_format_task_heading_uses_default_points_without_spaces(self) -> None:
         """Format task headings with default story points and escaped title."""
 

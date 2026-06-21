@@ -2,6 +2,8 @@
 
 from typing import Protocol, runtime_checkable
 
+from ss4d.model.task import Task
+
 
 @runtime_checkable
 class DocumentManager(Protocol):
@@ -9,6 +11,14 @@ class DocumentManager(Protocol):
 
     def append_task(self, number: int, title: str) -> None:
         """Append a task to the configured document."""
+        ...
+
+    def read_tasks(self) -> list[Task]:
+        """Read all tasks from the configured document."""
+        ...
+
+    def overwrite_tasks(self, tasks: list[Task]) -> None:
+        """Overwrite the configured document with the supplied tasks."""
         ...
 
     def sort_tasks(self) -> None:

@@ -7,11 +7,14 @@ from typing import Protocol, cast
 
 from ss4d.config import Config
 from ss4d.document.confluence_html_builder import (
+    format_storage_tasks,
     format_task_heading,
     sort_storage_body,
     update_storage_task_due_date,
     update_storage_task_status,
 )
+from ss4d.document.confluence_html_parser import parse_storage_tasks
+from ss4d.model.task import Task
 
 
 class ConfluenceClient(Protocol):
@@ -53,6 +56,30 @@ class ConfluenceDocumentManager:
             self.page_id,
             _extract_page_title(page),
             _append_storage_body(page, heading),
+            representation="storage",
+            minor_edit=False,
+        )
+
+    def read_tasks(self) -> list[Task]:
+        """Read all tasks from the configured Confluence page."""
+
+        page = self.client.get_page_by_id(
+            self.page_id,
+            expand="body.storage,version",
+        )
+        return parse_storage_tasks(_extract_storage_body(page))
+
+    def overwrite_tasks(self, tasks: list[Task]) -> None:
+        """Overwrite the configured Confluence page with supplied tasks."""
+
+        page = self.client.get_page_by_id(
+            self.page_id,
+            expand="body.storage,version",
+        )
+        self.client.update_page(
+            self.page_id,
+            _extract_page_title(page),
+            format_storage_tasks(tasks),
             representation="storage",
             minor_edit=False,
         )
