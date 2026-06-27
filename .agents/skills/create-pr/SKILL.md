@@ -19,16 +19,13 @@ description: Use this skill when creating a pull request. Also use it when the u
 
 # Pull Request Title
 
-- Write the pull request title in English.
-- If an issue is specified and its title is not English, translate or summarize the issue title into a concise English pull request title.
-- If an issue is specified and its title is already English, use the same title as the issue.
-- If no issue is specified, use an English title that describes the change.
+- If an issue is specified, use the same title as the issue.
+- If no issue is specified, use a title that describes the change.
 
 # Pull Request Body
 
 - Follow `.github/PULL_REQUEST_TEMPLATE.md`.
 - Describe the final changes relative to the target branch.
-- Write the pull request body in English.
 
 # Definition of Done
 
