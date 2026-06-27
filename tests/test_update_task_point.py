@@ -55,22 +55,22 @@ class UpdateTaskPointTest(TestCase):
             original_tasks = manager.sprint.tasks
             updated_point = update_task_point(
                 7,
-                8,
+                4,
                 config_path=_write_config(Path(directory)),
                 document_manager=manager,
             )
 
-        self.assertEqual(updated_point, 8)
-        self.assertEqual(manager.sprint.tasks[0].points, 8)
+        self.assertEqual(updated_point, 4)
+        self.assertEqual(manager.sprint.tasks[0].points, 4)
         self.assertEqual(
             manager.sprint.tasks[0],
-            replace(original_tasks[0], points=8),
+            replace(original_tasks[0], points=4),
         )
         self.assertEqual(manager.sprint.tasks[1], original_tasks[1])
         self.assertEqual(manager.sprint.start_day, date(2026, 6, 14))
         self.assertEqual(manager.sprint.done_point, 0)
-        self.assertEqual(manager.sprint.remaining_point, 13)
-        self.assertEqual(manager.sprint.all_point, 13)
+        self.assertEqual(manager.sprint.remaining_point, 9)
+        self.assertEqual(manager.sprint.all_point, 9)
         self.assertEqual(manager.write_count, 1)
 
     def test_update_done_task_point_recalculates_done_points(self) -> None:
@@ -91,12 +91,12 @@ class UpdateTaskPointTest(TestCase):
         self.assertEqual(manager.sprint.all_point, 18)
         self.assertEqual(manager.write_count, 1)
 
-    def test_invalid_point_does_not_update_document(self) -> None:
-        """ドキュメントの読み書き前に許可されていないポイントを拒否する。"""
+    def test_non_positive_point_does_not_update_document(self) -> None:
+        """ドキュメントの読み書き前に自然数ではないポイントを拒否する。"""
 
         with TemporaryDirectory() as directory:
             manager = FakeDocumentManager()
-            with self.assertRaisesRegex(ValueError, "Point must be one of"):
+            with self.assertRaisesRegex(ValueError, "Point must be 1 or greater"):
                 update_task_point(
                     7,
                     0,

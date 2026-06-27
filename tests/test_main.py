@@ -114,13 +114,12 @@ class MainTest(TestCase):
 
         with patch(
             "ss4d.main.update_task_point",
-            side_effect=ValueError("Point must be one of: 1, 2, 3, 5, 8, 13, 21."),
+            side_effect=ValueError("Point must be 1 or greater."),
         ):
-            result = runner.invoke(app, ["point", "7", "4"])
+            result = runner.invoke(app, ["point", "7", "0"])
 
         self.assertEqual(result.exit_code, 1)
         self.assertEqual(
             result.stderr,
-            "Failed to update task point: "
-            "Point must be one of: 1, 2, 3, 5, 8, 13, 21.\n",
+            "Failed to update task point: Point must be 1 or greater.\n",
         )

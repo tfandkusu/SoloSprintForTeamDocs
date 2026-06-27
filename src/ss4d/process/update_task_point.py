@@ -8,8 +8,6 @@ from ss4d.document.confluence import create_confluence_document_manager
 from ss4d.document.manager import DocumentManager
 from ss4d.process.common.calculate_point import with_calculated_points
 
-ALLOWED_POINTS = (1, 2, 3, 5, 8, 13, 21)
-
 
 def update_task_point(
     number: int,
@@ -40,10 +38,7 @@ def update_task_point(
 
 
 def validate_point(point: int) -> None:
-    """タスクポイントが許可されたフィボナッチ数か検証する。"""
+    """タスクポイントが自然数か検証する。"""
 
-    if point not in ALLOWED_POINTS:
-        allowed_points = ", ".join(
-            str(allowed_point) for allowed_point in ALLOWED_POINTS
-        )
-        raise ValueError(f"Point must be one of: {allowed_points}.")
+    if point < 1:
+        raise ValueError("Point must be 1 or greater.")
