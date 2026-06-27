@@ -18,6 +18,7 @@ class FakeDocumentManager:
         self.sprint = Sprint(
             start_day=date(2026, 6, 14),
             done_point=99,
+            remaining_point=99,
             all_point=99,
             tasks=(_task(7), _task(8, due_date=date(2026, 7, 1))),
         )
@@ -65,6 +66,7 @@ class UpdateTaskDueDateTest(TestCase):
         self.assertEqual(manager.sprint.tasks[1], original_tasks[1])
         self.assertEqual(manager.sprint.start_day, date(2026, 6, 14))
         self.assertEqual(manager.sprint.done_point, 0)
+        self.assertEqual(manager.sprint.remaining_point, 6)
         self.assertEqual(manager.sprint.all_point, 6)
         self.assertEqual(manager.write_count, 1)
 

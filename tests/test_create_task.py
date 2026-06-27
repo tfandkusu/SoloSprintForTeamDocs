@@ -17,6 +17,7 @@ class FakeDocumentManager:
         self.sprint = Sprint(
             start_day=date(2026, 6, 14),
             done_point=99,
+            remaining_point=99,
             all_point=99,
             tasks=(
                 Task(
@@ -63,6 +64,7 @@ class CreateTaskTest(TestCase):
                 Sprint(
                     start_day=date(2026, 6, 14),
                     done_point=0,
+                    remaining_point=4,
                     all_point=4,
                     tasks=(
                         Task(

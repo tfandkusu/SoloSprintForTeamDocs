@@ -16,6 +16,7 @@ class FakeDocumentManager:
         self.sprint = Sprint(
             start_day=date(2026, 6, 14),
             done_point=99,
+            remaining_point=99,
             all_point=99,
             tasks=tuple(tasks),
         )
@@ -58,6 +59,7 @@ class SortTasksTest(TestCase):
         self.assertEqual([task.id for task in manager.sprint.tasks], [3, 4, 1, 2, 5])
         self.assertEqual(manager.sprint.start_day, date(2026, 6, 14))
         self.assertEqual(manager.sprint.done_point, 5)
+        self.assertEqual(manager.sprint.remaining_point, 10)
         self.assertEqual(manager.sprint.all_point, 15)
         self.assertEqual(manager.write_count, 1)
 

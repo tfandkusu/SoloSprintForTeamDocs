@@ -12,5 +12,6 @@ class Sprint:
 
     start_day: date
     done_point: int
+    remaining_point: int
     all_point: int
     tasks: tuple[Task, ...]

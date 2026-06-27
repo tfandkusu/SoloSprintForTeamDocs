@@ -40,6 +40,7 @@ def _format_sprint_info(sprint: Sprint) -> str:
     toml_document = tomlkit.document()
     toml_document.add("start_day", sprint.start_day.strftime("%Y/%m/%d"))
     toml_document.add("done_point", sprint.done_point)
+    toml_document.add("remaining_point", sprint.remaining_point)
     toml_document.add("all_point", sprint.all_point)
     raw_toml = tomlkit.dumps(toml_document)
     return (

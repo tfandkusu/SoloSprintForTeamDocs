@@ -84,6 +84,7 @@ class ConfluenceDocumentManagerTest(TestCase):
             Sprint(
                 start_day=date.today(),
                 done_point=0,
+                remaining_point=3,
                 all_point=3,
                 tasks=(
                     Task(
@@ -110,6 +111,7 @@ class ConfluenceDocumentManagerTest(TestCase):
             Sprint(
                 start_day=date(2026, 6, 14),
                 done_point=99,
+                remaining_point=99,
                 all_point=99,
                 tasks=(
                     Task(
@@ -132,6 +134,7 @@ class ConfluenceDocumentManagerTest(TestCase):
             "<ac:plain-text-body><![CDATA["
             'start_day = "2026/06/14"\n'
             "done_point = 0\n"
+            "remaining_point = 2\n"
             "all_point = 2\n"
             "]]></ac:plain-text-body>"
             "</ac:structured-macro>"
@@ -166,6 +169,7 @@ class ConfluenceDocumentManagerTest(TestCase):
         sprint = Sprint(
             start_day=date(2026, 6, 14),
             done_point=0,
+            remaining_point=0,
             all_point=0,
             tasks=(
                 Task(
@@ -192,6 +196,7 @@ class ConfluenceDocumentManagerTest(TestCase):
             Sprint(
                 start_day=date(2026, 6, 14),
                 done_point=5,
+                remaining_point=4,
                 all_point=9,
                 tasks=sprint.tasks,
             ),
@@ -212,6 +217,7 @@ class ConfluenceDocumentManagerTest(TestCase):
                             "<ac:plain-text-body><![CDATA["
                             'start_day = "2026/06/14"\n'
                             "done_point = 1\n"
+                            "remaining_point = 4\n"
                             "all_point = 2\n"
                             "]]></ac:plain-text-body>"
                             "</ac:structured-macro>"
@@ -228,6 +234,7 @@ class ConfluenceDocumentManagerTest(TestCase):
             Sprint(
                 start_day=date(2026, 6, 14),
                 done_point=1,
+                remaining_point=4,
                 all_point=2,
                 tasks=(
                     Task(
