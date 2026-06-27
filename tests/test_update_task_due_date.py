@@ -11,19 +11,19 @@ from ss4d.process.update_task_due_date import parse_deadline, update_task_due_da
 
 class FakeDocumentManager:
     def __init__(self, *, should_fail: bool = False) -> None:
-        """Create a fake document manager for update-task-due-date tests."""
+        """update-task-due-date テスト用の偽ドキュメントマネージャーを作成する。"""
 
         self.should_fail = should_fail
         self.tasks = [_task(7), _task(8, due_date=date(2026, 7, 1))]
         self.write_count = 0
 
     def read_tasks(self) -> list[Task]:
-        """Return a copy of the configured tasks."""
+        """設定されたタスクのコピーを返す。"""
 
         return self.tasks.copy()
 
     def write_tasks(self, tasks: list[Task]) -> None:
-        """Record replacement tasks or raise the configured failure."""
+        """置換後のタスクを記録するか、設定された失敗を送出する。"""
 
         if self.should_fail:
             raise RuntimeError("Document update failed")
@@ -33,12 +33,12 @@ class FakeDocumentManager:
 
 class UpdateTaskDueDateTest(TestCase):
     def test_parse_deadline_returns_iso_date(self) -> None:
-        """Parse a date expression into an ISO date."""
+        """日付表現を ISO 形式の日付へ解析する。"""
 
         self.assertEqual(parse_deadline("2026-06-30"), "2026-06-30")
 
     def test_update_task_due_date_replaces_only_matching_domain_model(self) -> None:
-        """Update the matching due date while preserving every other field."""
+        """他のフィールドを維持しながら一致する期限日を更新する。"""
 
         with TemporaryDirectory() as directory:
             manager = FakeDocumentManager()
@@ -60,7 +60,7 @@ class UpdateTaskDueDateTest(TestCase):
         self.assertEqual(manager.write_count, 1)
 
     def test_unknown_deadline_does_not_update_document(self) -> None:
-        """Reject unknown deadlines before reading or writing the document."""
+        """ドキュメントの読み書き前に未知の期限日を拒否する。"""
 
         with TemporaryDirectory() as directory:
             manager = FakeDocumentManager()
@@ -75,7 +75,7 @@ class UpdateTaskDueDateTest(TestCase):
         self.assertEqual(manager.write_count, 0)
 
     def test_missing_task_does_not_update_document(self) -> None:
-        """Reject a missing task number without writing the document."""
+        """ドキュメントを書き込まずに存在しないタスク番号を拒否する。"""
 
         with TemporaryDirectory() as directory:
             manager = FakeDocumentManager()
@@ -90,7 +90,7 @@ class UpdateTaskDueDateTest(TestCase):
         self.assertEqual(manager.write_count, 0)
 
     def test_failed_document_update_raises_error(self) -> None:
-        """Raise the document update error when writing updated tasks fails."""
+        """更新後タスクの書き込み失敗時にドキュメント更新エラーを送出する。"""
 
         with TemporaryDirectory() as directory:
             manager = FakeDocumentManager(should_fail=True)
@@ -104,7 +104,7 @@ class UpdateTaskDueDateTest(TestCase):
 
 
 def _task(number: int, *, due_date: date | None = None) -> Task:
-    """Create a task fixture with fields that updates must preserve."""
+    """更新で維持すべきフィールドを持つタスクフィクスチャを作成する。"""
 
     return Task(
         id=number,
@@ -117,7 +117,7 @@ def _task(number: int, *, due_date: date | None = None) -> Task:
 
 
 def _write_config(directory: Path) -> Path:
-    """Write a temporary ss4d config file for tests."""
+    """テスト用の一時 ss4d 設定ファイルを書き込む。"""
 
     config_path = directory / ".ss4d.toml"
     config_path.write_text(

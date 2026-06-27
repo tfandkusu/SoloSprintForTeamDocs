@@ -1,4 +1,4 @@
-"""Confluence HTML body parser and serializer."""
+"""Confluence HTML 本文のパーサーとシリアライザー。"""
 
 import re
 from datetime import date
@@ -11,13 +11,13 @@ from ss4d.model.task_status import TaskStatus
 
 
 def parse_storage_tasks(body: str) -> list[Task]:
-    """Parse task sections from a Confluence storage-format body."""
+    """Confluence storage 形式の本文からタスクセクションを解析する。"""
 
     return [_parse_task(section) for section in _split_h1_sections(body)]
 
 
 def _parse_task(section_body: str) -> Task:
-    """Parse one h1-led storage-format section into a task."""
+    """h1 で始まる storage 形式セクション 1 件をタスクに解析する。"""
 
     soup = BeautifulSoup(section_body, "html.parser")
     h1 = soup.find("h1")
@@ -57,7 +57,7 @@ def _parse_task(section_body: str) -> Task:
 
 
 def _split_h1_sections(body: str) -> list[str]:
-    """Split an HTML body into h1-led section strings."""
+    """HTML 本文を h1 で始まるセクション文字列へ分割する。"""
 
     soup = BeautifulSoup(body, "html.parser")
     contents = list(soup.contents)
@@ -72,7 +72,7 @@ def _split_h1_sections(body: str) -> list[str]:
 
 
 def _extract_due_date(h1: Tag) -> date | None:
-    """Extract the first valid due date from an h1 tag."""
+    """h1 タグから最初の有効な期限日を抽出する。"""
 
     time = h1.find("time")
     if not isinstance(time, Tag):
@@ -89,7 +89,7 @@ def _extract_due_date(h1: Tag) -> date | None:
 
 
 def _extract_status(h1: Tag) -> str:
-    """Extract the first status macro title from an h1 tag."""
+    """h1 タグから最初のステータスマクロタイトルを抽出する。"""
 
     status_macro = h1.find("ac:structured-macro", attrs={"ac:name": "status"})
     if not isinstance(status_macro, Tag):
@@ -103,7 +103,7 @@ def _extract_status(h1: Tag) -> str:
 
 
 def _extract_task_number(h1: Tag) -> int | None:
-    """Extract the first task number from an h1 tag."""
+    """h1 タグから最初のタスク番号を抽出する。"""
 
     match = re.search(r"#(\d+)(?!\d)", h1.get_text())
     if match is None:
@@ -112,12 +112,12 @@ def _extract_task_number(h1: Tag) -> int | None:
 
 
 def _is_tag(element: PageElement, name: str) -> bool:
-    """Return whether the element is a tag with the given name."""
+    """要素が指定名のタグかどうかを返す。"""
 
     return isinstance(element, Tag) and element.name == name
 
 
 def _serialize(elements: list[PageElement]) -> str:
-    """Serialize parsed elements back to a storage-format fragment."""
+    """解析済み要素を storage 形式のフラグメントへシリアライズする。"""
 
     return "".join(str(element) for element in elements)

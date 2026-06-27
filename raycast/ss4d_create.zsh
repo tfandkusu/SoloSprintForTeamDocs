@@ -1,28 +1,28 @@
 #!/bin/zsh
 
-# Required parameters:
+# 必須パラメーター:
 # @raycast.schemaVersion 1
 # @raycast.title ss4d create
 # @raycast.mode compact
 
-# Optional parameters:
+# 任意パラメーター:
 # @raycast.packageName SoloSprintForTeamDocs
 # @raycast.argument1 { "type": "text", "placeholder": "TITLE" }
 # @raycast.description Create a task heading in Confluence.
 
 set -e
 
-# Get the absolute path to this script's directory.
+# このスクリプトのディレクトリの絶対パスを取得する。
 script_dir="${0:A:h}"
 
-# The repository root is the parent directory of the raycast directory.
+# リポジトリルートは raycast ディレクトリの親ディレクトリ。
 repo_root="${script_dir:h}"
 
-# Load the uv resolver from the same directory as this script.
+# このスクリプトと同じディレクトリから uv 解決用スクリプトを読み込む。
 source "${script_dir}/uv.zsh"
 
-# Run ss4d from the repository root so uv can find pyproject.toml.
+# uv が pyproject.toml を見つけられるようにリポジトリルートから ss4d を実行する。
 cd "${repo_root}"
 
-# Use the title passed from Raycast as the ss4d create argument.
+# Raycast から渡されたタイトルを ss4d create の引数として使う。
 "${SS4D_UV_BIN}" run ss4d create "$1"

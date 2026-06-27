@@ -1,4 +1,4 @@
-"""Create-task process."""
+"""タスク作成処理。"""
 
 from datetime import date
 from pathlib import Path
@@ -16,7 +16,7 @@ def create_task(
     config_path: Path = CONFIG_PATH,
     document_manager: DocumentManager | None = None,
 ) -> int:
-    """Prepend a task to the configured document and return its number."""
+    """設定されたドキュメントの先頭にタスクを追加して番号を返す。"""
 
     config = load_config(config_path)
     task_number = config.number

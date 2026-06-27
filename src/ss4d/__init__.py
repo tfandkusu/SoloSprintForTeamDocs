@@ -1,1 +1,1 @@
-"""SoloSprintForTeamDocs package."""
+"""SoloSprintForTeamDocs パッケージ。"""

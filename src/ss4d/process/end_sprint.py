@@ -1,1 +1,1 @@
-"""End-sprint process placeholder."""
+"""スプリント終了処理のプレースホルダー。"""

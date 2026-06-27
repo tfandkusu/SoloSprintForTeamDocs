@@ -1,32 +1,32 @@
 ---
 name: create-pr
-description: Use this skill when creating a pull request. Also use it when the user provides a number starting with `#` and asks to create or implement something.
+description: プルリクエストを作成するときにこのスキルを使う。ユーザーが `#` で始まる番号を示して、何かの作成または実装を依頼した場合にも使う。
 ---
 
-# Pull Request Workflow
+# プルリクエストワークフロー
 
-- If a number starting with `#` is provided, treat it as a GitHub issue number, read the issue, and implement it.
-- Do not rewrite `README.md`.
+- `#` で始まる番号が指定された場合は GitHub Issue 番号として扱い、Issue を読んで実装する。
+- `README.md` を書き直さない。
 
-# Branch Name
+# ブランチ名
 
-- If an issue is specified, use `issue_NUMBER` as the pull request branch name.
-- Otherwise, choose a concise branch name that describes the work.
+- Issue が指定された場合は、プルリクエストのブランチ名に `issue_NUMBER` を使う。
+- それ以外の場合は、作業内容を表す簡潔なブランチ名を選ぶ。
 
-# Branch Creation
+# ブランチ作成
 
-- Switch to the `main` branch, pull the latest changes from the remote, then create the pull request branch.
+- `main` ブランチへ切り替え、リモートから最新の変更を取得してから、プルリクエスト用ブランチを作成する。
 
-# Pull Request Title
+# プルリクエストタイトル
 
-- If an issue is specified, use the same title as the issue.
-- If no issue is specified, use a title that describes the change.
+- Issue が指定された場合は、Issue と同じタイトルを使う。
+- Issue が指定されていない場合は、変更内容を表すタイトルを使う。
 
-# Pull Request Body
+# プルリクエスト本文
 
-- Follow `.github/PULL_REQUEST_TEMPLATE.md`.
-- Describe the final changes relative to the target branch.
+- `.github/PULL_REQUEST_TEMPLATE.md` に従う。
+- ターゲットブランチとの差分として最終的な変更内容を説明する。
 
-# Definition of Done
+# 完了の定義
 
-- The work is complete only after all requested changes are committed, pushed, and the pull request body is updated.
+- 依頼されたすべての変更をコミットし、プッシュし、プルリクエスト本文を更新して初めて作業完了とする。

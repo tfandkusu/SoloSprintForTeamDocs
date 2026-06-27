@@ -1,10 +1,10 @@
-"""Task status domain model."""
+"""タスクステータスのドメインモデル。"""
 
 from enum import StrEnum
 
 
 class TaskStatus(StrEnum):
-    """Supported workflow statuses for a task."""
+    """タスクでサポートするワークフローステータス。"""
 
     TODO = "todo"
     PROGRESS = "progress"
@@ -13,7 +13,7 @@ class TaskStatus(StrEnum):
 
 
 def normalize_task_status(status: str) -> str:
-    """Return a supported uppercase task status name."""
+    """サポートされる大文字のタスクステータス名を返す。"""
 
     status_name = status.upper()
     if status_name not in TaskStatus.__members__:

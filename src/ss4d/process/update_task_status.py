@@ -1,4 +1,4 @@
-"""Update-task-status process."""
+"""タスクステータス更新処理。"""
 
 from dataclasses import replace
 from pathlib import Path
@@ -16,7 +16,7 @@ def update_task_status(
     config_path: Path = CONFIG_PATH,
     document_manager: DocumentManager | None = None,
 ) -> str:
-    """Update a task status in the configured document and return its name."""
+    """設定されたドキュメント内のタスクステータスを更新して名前を返す。"""
 
     normalized_status = normalize_task_status(status)
     config = load_config(config_path)

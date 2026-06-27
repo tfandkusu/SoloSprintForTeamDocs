@@ -1,3 +1,3 @@
-# Repository Guidelines
+# リポジトリガイドライン
 
-- Add docstrings to all methods.
+- すべてのメソッドに docstring を追加する。

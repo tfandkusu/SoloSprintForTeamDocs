@@ -1,4 +1,4 @@
-"""Confluence HTML fragment builder."""
+"""Confluence HTML フラグメントビルダー。"""
 
 from html import escape
 
@@ -14,13 +14,13 @@ STATUS_COLOURS = {
 
 
 def format_storage_tasks(tasks: list[Task]) -> str:
-    """Serialize tasks into a Confluence storage-format body."""
+    """タスクを Confluence storage 形式の本文へシリアライズする。"""
 
     return "".join(f"{_format_task(task)}{task.body}" for task in tasks)
 
 
 def _format_task(task: Task) -> str:
-    """Format one task heading using every domain-model field."""
+    """すべてのドメインモデルフィールドを使ってタスク見出し 1 件を整形する。"""
 
     due_date = (
         f' <time datetime="{task.due_date.isoformat()}" />'
@@ -34,7 +34,7 @@ def _format_task(task: Task) -> str:
 
 
 def format_status_macro(status: str) -> str:
-    """Format the Confluence HTML status macro for a task status."""
+    """タスクステータス用の Confluence HTML ステータスマクロを整形する。"""
 
     status_name = normalize_task_status(status)
     colour = STATUS_COLOURS[status_name]

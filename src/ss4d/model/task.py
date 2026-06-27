@@ -1,4 +1,4 @@
-"""Task domain model."""
+"""タスクのドメインモデル。"""
 
 from dataclasses import dataclass
 from datetime import date
@@ -8,7 +8,7 @@ from ss4d.model.task_status import TaskStatus
 
 @dataclass(frozen=True)
 class Task:
-    """A task represented independently of its document format."""
+    """ドキュメント形式から独立して表現されたタスク。"""
 
     id: int
     title: str

@@ -1,4 +1,4 @@
-"""Document manager abstractions."""
+"""ドキュメントマネージャーの抽象化。"""
 
 from typing import Protocol, runtime_checkable
 
@@ -7,12 +7,12 @@ from ss4d.model.task import Task
 
 @runtime_checkable
 class DocumentManager(Protocol):
-    """Abstract document manager used by task processes."""
+    """タスク処理で使う抽象ドキュメントマネージャー。"""
 
     def read_tasks(self) -> list[Task]:
-        """Read all tasks from the configured document."""
+        """設定されたドキュメントからすべてのタスクを読み込む。"""
         ...
 
     def write_tasks(self, tasks: list[Task]) -> None:
-        """Overwrite the configured document with the supplied tasks."""
+        """指定されたタスクで設定済みのドキュメントを上書きする。"""
         ...

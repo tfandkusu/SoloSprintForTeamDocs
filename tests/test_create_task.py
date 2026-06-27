@@ -10,7 +10,7 @@ from ss4d.process.create_task import create_task
 
 class FakeDocumentManager:
     def __init__(self, *, should_fail: bool = False) -> None:
-        """Create a fake document manager for create-task tests."""
+        """create-task テスト用の偽ドキュメントマネージャーを作成する。"""
 
         self.should_fail = should_fail
         self.tasks = [
@@ -25,12 +25,12 @@ class FakeDocumentManager:
         ]
 
     def read_tasks(self) -> list[Task]:
-        """Return the configured tasks."""
+        """設定されたタスクを返す。"""
 
         return self.tasks.copy()
 
     def write_tasks(self, tasks: list[Task]) -> None:
-        """Record replacement tasks or raise the configured failure."""
+        """置換後のタスクを記録するか、設定された失敗を送出する。"""
 
         if self.should_fail:
             raise RuntimeError("Document update failed")
@@ -39,7 +39,7 @@ class FakeDocumentManager:
 
 class CreateTaskTest(TestCase):
     def test_create_task_updates_document_and_increments_number(self) -> None:
-        """Update the document and increment the task number after success."""
+        """ドキュメントを更新し、成功後にタスク番号をインクリメントする。"""
 
         with TemporaryDirectory() as directory:
             config_path = _write_config(Path(directory), number=1)
@@ -76,7 +76,7 @@ class CreateTaskTest(TestCase):
             self.assertIn("number = 2", config_path.read_text(encoding="utf-8"))
 
     def test_failed_document_update_does_not_increment_number(self) -> None:
-        """Keep the task number unchanged when the document update fails."""
+        """ドキュメント更新が失敗した場合はタスク番号を変更しない。"""
 
         with TemporaryDirectory() as directory:
             config_path = _write_config(Path(directory), number=1)
@@ -93,7 +93,7 @@ class CreateTaskTest(TestCase):
 
 
 def _write_config(directory: Path, *, number: int) -> Path:
-    """Write a temporary ss4d config file for tests."""
+    """テスト用の一時 ss4d 設定ファイルを書き込む。"""
 
     config_path = directory / ".ss4d.toml"
     config_path.write_text(

@@ -8,7 +8,7 @@ from ss4d.main import app
 
 class MainTest(TestCase):
     def test_create_outputs_created_task_number(self) -> None:
-        """Output only the created task number on success."""
+        """成功時に作成されたタスク番号だけを出力する。"""
 
         runner = CliRunner()
 
@@ -19,7 +19,7 @@ class MainTest(TestCase):
         self.assertEqual(result.output, "Created task #7\n")
 
     def test_sort_outputs_sorted_tasks(self) -> None:
-        """Output a sort completion message on success."""
+        """成功時に並び替え完了メッセージを出力する。"""
 
         runner = CliRunner()
 
@@ -31,7 +31,7 @@ class MainTest(TestCase):
         self.assertEqual(result.output, "Sorted tasks\n")
 
     def test_status_outputs_updated_task_status(self) -> None:
-        """Output a status update completion message on success."""
+        """成功時にステータス更新完了メッセージを出力する。"""
 
         runner = CliRunner()
 
@@ -45,7 +45,7 @@ class MainTest(TestCase):
         self.assertEqual(result.output, "Updated task #7 to DONE\n")
 
     def test_status_outputs_error_when_update_fails(self) -> None:
-        """Output a status update error when the process fails."""
+        """処理失敗時にステータス更新エラーを出力する。"""
 
         runner = CliRunner()
 
@@ -65,7 +65,7 @@ class MainTest(TestCase):
         )
 
     def test_due_outputs_updated_task_due_date(self) -> None:
-        """Output a due-date update completion message on success."""
+        """成功時に期限日更新完了メッセージを出力する。"""
 
         runner = CliRunner()
 
@@ -79,7 +79,7 @@ class MainTest(TestCase):
         self.assertEqual(result.output, "Updated task #7 due date to 2026-06-30\n")
 
     def test_due_outputs_error_when_update_fails(self) -> None:
-        """Output a due-date update error when the process fails."""
+        """処理失敗時に期限日更新エラーを出力する。"""
 
         runner = CliRunner()
 

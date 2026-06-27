@@ -1,1 +1,1 @@
-"""Task process modules for ss4d."""
+"""ss4d のタスク処理モジュール。"""
