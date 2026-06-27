@@ -6,6 +6,7 @@ from ss4d.config import ConfigError
 from ss4d.process.create_task import create_task
 from ss4d.process.sort_tasks import sort_tasks
 from ss4d.process.update_task_due_date import update_task_due_date
+from ss4d.process.update_task_point import update_task_point
 from ss4d.process.update_task_status import update_task_status
 
 app = typer.Typer(no_args_is_help=True)
@@ -78,6 +79,22 @@ def due(number: int, deadline: str) -> None:
         raise typer.Exit(code=1) from error
 
     typer.echo(f"Updated task #{number} due date to {due_date}")
+
+
+@app.command()
+def point(number: int, point: int) -> None:
+    """Confluence のタスクポイントを更新する。"""
+
+    try:
+        updated_point = update_task_point(number, point)
+    except ConfigError as error:
+        typer.echo(str(error), err=True)
+        raise typer.Exit(code=1) from error
+    except Exception as error:
+        typer.echo(f"Failed to update task point: {error}", err=True)
+        raise typer.Exit(code=1) from error
+
+    typer.echo(f"Updated task #{number} point to {updated_point}")
 
 
 def main() -> None:
