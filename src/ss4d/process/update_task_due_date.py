@@ -1,4 +1,4 @@
-"""Update-task-due-date process."""
+"""タスク期限日更新処理。"""
 
 from collections.abc import Callable
 from dataclasses import replace
@@ -21,7 +21,7 @@ def update_task_due_date(
     config_path: Path = CONFIG_PATH,
     document_manager: DocumentManager | None = None,
 ) -> str:
-    """Update a task due date in the configured document and return it."""
+    """設定されたドキュメント内のタスク期限日を更新して返す。"""
 
     due_date = parse_deadline(deadline)
     config = load_config(config_path)
@@ -40,7 +40,7 @@ def update_task_due_date(
 
 
 def parse_deadline(deadline: str) -> str:
-    """Parse a deadline expression and return an ISO date."""
+    """期限日の表現を解析して ISO 形式の日付を返す。"""
 
     dateparser = import_module("dateparser")
     parse = cast(DateParserParse, getattr(dateparser, "parse"))

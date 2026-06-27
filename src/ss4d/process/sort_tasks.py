@@ -1,4 +1,4 @@
-"""Sort-task process."""
+"""タスク並び替え処理。"""
 
 from datetime import date
 from pathlib import Path
@@ -14,7 +14,7 @@ def sort_tasks(
     config_path: Path = CONFIG_PATH,
     document_manager: DocumentManager | None = None,
 ) -> None:
-    """Sort task sections in the configured document."""
+    """設定されたドキュメント内のタスクセクションを並び替える。"""
 
     config = load_config(config_path)
 

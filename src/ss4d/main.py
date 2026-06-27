@@ -1,4 +1,4 @@
-"""Command-line interface for ss4d."""
+"""ss4d のコマンドラインインターフェース。"""
 
 import typer
 
@@ -13,12 +13,12 @@ app = typer.Typer(no_args_is_help=True)
 
 @app.callback()
 def callback() -> None:
-    """SoloSprintForTeamDocs command-line tool."""
+    """SoloSprintForTeamDocs のコマンドラインツール。"""
 
 
 @app.command()
 def create(title: str) -> None:
-    """Create a task heading in Confluence."""
+    """Confluence にタスク見出しを作成する。"""
 
     try:
         task_number = create_task(title)
@@ -34,7 +34,7 @@ def create(title: str) -> None:
 
 @app.command()
 def sort() -> None:
-    """Sort task headings in Confluence."""
+    """Confluence のタスク見出しを並び替える。"""
 
     try:
         sort_tasks()
@@ -50,7 +50,7 @@ def sort() -> None:
 
 @app.command()
 def status(number: int, status_name: str) -> None:
-    """Update a task status in Confluence."""
+    """Confluence のタスクステータスを更新する。"""
 
     try:
         updated_status = update_task_status(number, status_name)
@@ -66,7 +66,7 @@ def status(number: int, status_name: str) -> None:
 
 @app.command()
 def due(number: int, deadline: str) -> None:
-    """Update a task due date in Confluence."""
+    """Confluence のタスク期限日を更新する。"""
 
     try:
         due_date = update_task_due_date(number, deadline)
@@ -81,6 +81,6 @@ def due(number: int, deadline: str) -> None:
 
 
 def main() -> None:
-    """Run the Typer application."""
+    """Typer アプリケーションを実行する。"""
 
     app()

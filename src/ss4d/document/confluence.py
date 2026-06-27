@@ -1,4 +1,4 @@
-"""Confluence document manager."""
+"""Confluence ドキュメントマネージャー。"""
 
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -12,10 +12,10 @@ from ss4d.model.task import Task
 
 
 class ConfluenceClient(Protocol):
-    """Small subset of ConfluenceCloud used by the document manager."""
+    """ドキュメントマネージャーが使う ConfluenceCloud の小さなサブセット。"""
 
     def get_page_by_id(self, page_id: str, expand: str) -> Mapping[str, object]:
-        """Fetch a Confluence page."""
+        """Confluence ページを取得する。"""
         ...
 
     def update_page(
@@ -27,19 +27,19 @@ class ConfluenceClient(Protocol):
         representation: str,
         minor_edit: bool,
     ) -> object:
-        """Update a Confluence page."""
+        """Confluence ページを更新する。"""
         ...
 
 
 @dataclass(frozen=True)
 class ConfluenceDocumentManager:
-    """Document manager implementation backed by Confluence."""
+    """Confluence をバックエンドにするドキュメントマネージャー実装。"""
 
     client: ConfluenceClient
     page_id: str
 
     def read_tasks(self) -> list[Task]:
-        """Read all tasks from the configured Confluence page."""
+        """設定された Confluence ページからすべてのタスクを読み込む。"""
 
         page = self.client.get_page_by_id(
             self.page_id,
@@ -48,7 +48,7 @@ class ConfluenceDocumentManager:
         return parse_storage_tasks(_extract_storage_body(page))
 
     def write_tasks(self, tasks: list[Task]) -> None:
-        """Overwrite the configured Confluence page with supplied tasks."""
+        """指定されたタスクで設定済みの Confluence ページを上書きする。"""
 
         page = self.client.get_page_by_id(
             self.page_id,
@@ -64,7 +64,7 @@ class ConfluenceDocumentManager:
 
 
 def create_confluence_document_manager(config: Config) -> ConfluenceDocumentManager:
-    """Create a Confluence document manager from configuration."""
+    """設定から Confluence ドキュメントマネージャーを作成する。"""
 
     return ConfluenceDocumentManager(
         client=create_confluence_client(config),
@@ -73,7 +73,7 @@ def create_confluence_document_manager(config: Config) -> ConfluenceDocumentMana
 
 
 def create_confluence_client(config: Config) -> ConfluenceClient:
-    """Create an authenticated Confluence client from configuration."""
+    """設定から認証済み Confluence クライアントを作成する。"""
 
     confluence_module = import_module("atlassian")
     confluence = getattr(confluence_module, "Confluence")
@@ -89,7 +89,7 @@ def create_confluence_client(config: Config) -> ConfluenceClient:
 
 
 def _extract_page_title(page: Mapping[str, object]) -> str:
-    """Extract the Confluence page title from an API response."""
+    """API レスポンスから Confluence ページタイトルを抽出する。"""
 
     title = page.get("title")
     if not isinstance(title, str) or title == "":
@@ -98,7 +98,7 @@ def _extract_page_title(page: Mapping[str, object]) -> str:
 
 
 def _extract_storage_body(page: Mapping[str, object]) -> str:
-    """Extract the storage-format body from an API response."""
+    """API レスポンスから storage 形式の本文を抽出する。"""
 
     body = page.get("body")
     if not isinstance(body, Mapping):

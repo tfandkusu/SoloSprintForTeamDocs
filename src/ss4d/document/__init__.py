@@ -1,1 +1,1 @@
-"""Document management adapters for ss4d."""
+"""ss4d のドキュメント管理アダプター。"""

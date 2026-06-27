@@ -1,11 +1,11 @@
 #!/bin/zsh
 
-# Required parameters:
+# 必須パラメーター:
 # @raycast.schemaVersion 1
 # @raycast.title ss4d due
 # @raycast.mode compact
 
-# Optional parameters:
+# 任意パラメーター:
 # @raycast.packageName SoloSprintForTeamDocs
 # @raycast.argument1 { "type": "text", "placeholder": "NUMBER" }
 # @raycast.argument2 { "type": "text", "placeholder": "DEADLINE" }
@@ -13,16 +13,16 @@
 
 set -e
 
-# Get the absolute path to this script's directory.
+# このスクリプトのディレクトリの絶対パスを取得する。
 script_dir="${0:A:h}"
 
-# The repository root is the parent directory of the raycast directory.
+# リポジトリルートは raycast ディレクトリの親ディレクトリ。
 repo_root="${script_dir:h}"
 
-# Load the uv resolver from the same directory as this script.
+# このスクリプトと同じディレクトリから uv 解決用スクリプトを読み込む。
 source "${script_dir}/uv.zsh"
 
-# Run ss4d from the repository root so uv can find pyproject.toml.
+# uv が pyproject.toml を見つけられるようにリポジトリルートから ss4d を実行する。
 cd "${repo_root}"
 
 "${SS4D_UV_BIN}" run ss4d due "$1" "$2"

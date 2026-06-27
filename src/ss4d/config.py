@@ -1,4 +1,4 @@
-"""Configuration helpers for ss4d."""
+"""ss4d の設定ヘルパー。"""
 
 from dataclasses import dataclass
 from pathlib import Path
@@ -11,12 +11,12 @@ CONFIG_PATH = Path.home() / ".ss4d.toml"
 
 
 class ConfigError(Exception):
-    """Raised when the ss4d config file cannot be used."""
+    """ss4d 設定ファイルを利用できない場合に送出される例外。"""
 
 
 @dataclass(frozen=True)
 class Config:
-    """Runtime configuration loaded from .ss4d.toml."""
+    """.ss4d.toml から読み込まれる実行時設定。"""
 
     url: str
     token: str
@@ -26,7 +26,7 @@ class Config:
 
 
 def load_config(path: Path = CONFIG_PATH) -> Config:
-    """Load and validate ss4d configuration."""
+    """ss4d 設定を読み込み検証する。"""
 
     if not path.exists():
         raise ConfigError(f"Config file not found: {path}")
@@ -44,7 +44,7 @@ def load_config(path: Path = CONFIG_PATH) -> Config:
 
 
 def increment_number(path: Path = CONFIG_PATH) -> None:
-    """Increment the configured task number in place."""
+    """設定済みのタスク番号をその場でインクリメントする。"""
 
     if not path.exists():
         raise ConfigError(f"Config file not found: {path}")
@@ -57,13 +57,13 @@ def increment_number(path: Path = CONFIG_PATH) -> None:
 
 
 def _get_root_table(document: TOMLDocument) -> dict[str, object]:
-    """Return the root TOML document as a mutable mapping."""
+    """ルート TOML ドキュメントをミュータブルなマッピングとして返す。"""
 
     return cast(dict[str, object], document)
 
 
 def _require_string(raw_config: dict[str, object], field_name: str) -> str:
-    """Return a required non-empty string config field."""
+    """必須の空でない文字列設定フィールドを返す。"""
 
     value = raw_config.get(field_name)
     if not isinstance(value, str) or value == "":
@@ -72,7 +72,7 @@ def _require_string(raw_config: dict[str, object], field_name: str) -> str:
 
 
 def _require_int(raw_config: dict[str, object], field_name: str) -> int:
-    """Return a required integer config field."""
+    """必須の整数設定フィールドを返す。"""
 
     value = raw_config.get(field_name)
     if not isinstance(value, int):

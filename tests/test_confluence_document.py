@@ -11,7 +11,7 @@ from ss4d.model.task_status import TaskStatus
 
 class FakeConfluenceClient:
     def __init__(self, *, page: dict[str, Any] | None = None) -> None:
-        """Create a fake Confluence client for document manager tests."""
+        """ドキュメントマネージャーテスト用の偽 Confluence クライアントを作成する。"""
 
         self.page = page or {
             "title": "Sprint page",
@@ -25,7 +25,7 @@ class FakeConfluenceClient:
         self.minor_edit: bool | None = None
 
     def get_page_by_id(self, page_id: str, expand: str) -> dict[str, Any]:
-        """Record the fetch request and return a stored page response."""
+        """取得リクエストを記録し、保存済みページレスポンスを返す。"""
 
         self.page_id = page_id
         self.expand = expand
@@ -40,7 +40,7 @@ class FakeConfluenceClient:
         representation: str,
         minor_edit: bool,
     ) -> object:
-        """Record the update request."""
+        """更新リクエストを記録する。"""
 
         self.page_id = page_id
         self.updated_title = title
@@ -52,7 +52,7 @@ class FakeConfluenceClient:
 
 class ConfluenceDocumentManagerTest(TestCase):
     def test_read_tasks_converts_document_to_domain_models(self) -> None:
-        """Read every document task including its free-form HTML body."""
+        """自由形式の HTML 本文を含むすべてのドキュメントタスクを読み込む。"""
 
         client = FakeConfluenceClient(
             page={
@@ -89,7 +89,7 @@ class ConfluenceDocumentManagerTest(TestCase):
         self.assertEqual(client.expand, "body.storage,version")
 
     def test_write_tasks_replaces_document_from_domain_models(self) -> None:
-        """Replace the complete document using supplied task models."""
+        """指定されたタスクモデルを使ってドキュメント全体を置き換える。"""
 
         client = FakeConfluenceClient()
         manager = ConfluenceDocumentManager(client=client, page_id="123")
@@ -120,7 +120,7 @@ class ConfluenceDocumentManagerTest(TestCase):
         self.assertFalse(client.minor_edit)
 
     def test_storage_tasks_round_trip_all_domain_fields(self) -> None:
-        """Round-trip supported task fields through Confluence storage HTML."""
+        """サポート対象のタスクフィールドを Confluence storage HTML 経由で往復させる。"""
 
         tasks = [
             Task(
@@ -136,7 +136,7 @@ class ConfluenceDocumentManagerTest(TestCase):
         self.assertEqual(parse_storage_tasks(format_storage_tasks(tasks)), tasks)
 
     def test_read_tasks_defaults_unknown_status_to_todo(self) -> None:
-        """Treat unsupported document status names as todo tasks."""
+        """サポート外のドキュメントステータス名を todo タスクとして扱う。"""
 
         client = FakeConfluenceClient(
             page={
@@ -156,7 +156,7 @@ class ConfluenceDocumentManagerTest(TestCase):
 
 
 def _status_macro(status: str) -> str:
-    """Format a status macro fixture."""
+    """ステータスマクロのフィクスチャを整形する。"""
 
     return (
         '<ac:structured-macro ac:name="status" ac:schema-version="1">'

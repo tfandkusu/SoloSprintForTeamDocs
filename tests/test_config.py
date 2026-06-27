@@ -7,13 +7,13 @@ from ss4d.config import ConfigError, increment_number, load_config
 
 class ConfigTest(TestCase):
     def test_missing_config_file_is_rejected(self) -> None:
-        """Reject loading configuration when the file does not exist."""
+        """ファイルが存在しない場合は設定の読み込みを拒否する。"""
 
         with self.assertRaisesRegex(ConfigError, "Config file not found"):
             load_config(Path("/missing/.ss4d.toml"))
 
     def test_missing_required_field_is_rejected(self) -> None:
-        """Reject configuration that omits a required field."""
+        """必須フィールドが欠けている設定を拒否する。"""
 
         with TemporaryDirectory() as directory:
             config_path = Path(directory) / ".ss4d.toml"
@@ -31,7 +31,7 @@ class ConfigTest(TestCase):
                 load_config(config_path)
 
     def test_non_integer_number_is_rejected(self) -> None:
-        """Reject configuration whose task number is not an integer."""
+        """タスク番号が整数でない設定を拒否する。"""
 
         with TemporaryDirectory() as directory:
             config_path = Path(directory) / ".ss4d.toml"
@@ -50,7 +50,7 @@ class ConfigTest(TestCase):
                 load_config(config_path)
 
     def test_email_is_loaded(self) -> None:
-        """Load the Atlassian account email."""
+        """Atlassian アカウントのメールアドレスを読み込む。"""
 
         with TemporaryDirectory() as directory:
             config_path = Path(directory) / ".ss4d.toml"
@@ -66,7 +66,7 @@ class ConfigTest(TestCase):
             self.assertEqual(load_config(config_path).email, "user@example.com")
 
     def test_missing_email_is_rejected(self) -> None:
-        """Reject configuration that omits the Atlassian account email."""
+        """Atlassian アカウントのメールアドレスが欠けている設定を拒否する。"""
 
         with TemporaryDirectory() as directory:
             config_path = Path(directory) / ".ss4d.toml"
@@ -85,7 +85,7 @@ class ConfigTest(TestCase):
                 load_config(config_path)
 
     def test_empty_email_is_rejected(self) -> None:
-        """Reject email when it is blank."""
+        """メールアドレスが空白の場合は拒否する。"""
 
         with TemporaryDirectory() as directory:
             config_path = Path(directory) / ".ss4d.toml"
@@ -105,7 +105,7 @@ class ConfigTest(TestCase):
                 load_config(config_path)
 
     def test_increment_number_updates_config_file(self) -> None:
-        """Increment the stored task number in the config file."""
+        """設定ファイルに保存されたタスク番号をインクリメントする。"""
 
         with TemporaryDirectory() as directory:
             config_path = Path(directory) / ".ss4d.toml"

@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "SoloSprintForTeamDocs"
 version = "0.1.0"
-description = "A personal task management tool using structured data in normal Team Docs documents with relative estimation, cycles, and velocity tracking."
+description = "通常の Team Docs ドキュメント内の構造化データで相対見積もり、サイクル、ベロシティ追跡を扱う個人向けタスク管理ツール。"
 readme = "README.md"
 requires-python = ">=3.14,<3.15"
 dependencies = [
@@ -35,6 +35,6 @@ packages = ["src/ss4d"]
 
 [tool.ruff.lint]
 extend-select = [
-    "I",   # isort
-    "UP",  # pyupgrade
+    "I",   # インポートの並び替え
+    "UP",  # Python 構文の更新
 ]

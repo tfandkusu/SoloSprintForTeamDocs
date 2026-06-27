@@ -10,19 +10,19 @@ from ss4d.process.sort_tasks import sort_tasks
 
 class FakeDocumentManager:
     def __init__(self, tasks: list[Task], *, should_fail: bool = False) -> None:
-        """Create a fake document manager for sort-task tests."""
+        """sort-task テスト用の偽ドキュメントマネージャーを作成する。"""
 
         self.tasks = tasks
         self.should_fail = should_fail
         self.write_count = 0
 
     def read_tasks(self) -> list[Task]:
-        """Return a copy of the configured tasks."""
+        """設定されたタスクのコピーを返す。"""
 
         return self.tasks.copy()
 
     def write_tasks(self, tasks: list[Task]) -> None:
-        """Record replacement tasks or raise the configured failure."""
+        """置換後のタスクを記録するか、設定された失敗を送出する。"""
 
         if self.should_fail:
             raise RuntimeError("Document update failed")
@@ -32,7 +32,7 @@ class FakeDocumentManager:
 
 class SortTasksTest(TestCase):
     def test_sort_tasks_updates_domain_models_by_status_and_due_date(self) -> None:
-        """Sort non-done tasks before done tasks and missing due dates last."""
+        """未完了タスクを完了タスクより前に置き、期限日なしを最後に並べる。"""
 
         tasks = [
             _task(1, due_date=date(2026, 6, 20)),
@@ -53,7 +53,7 @@ class SortTasksTest(TestCase):
         self.assertEqual(manager.write_count, 1)
 
     def test_failed_document_update_raises_error(self) -> None:
-        """Raise the document update error when writing sorted tasks fails."""
+        """並び替え後タスクの書き込み失敗時にドキュメント更新エラーを送出する。"""
 
         with TemporaryDirectory() as directory:
             manager = FakeDocumentManager([_task(1)], should_fail=True)
@@ -71,7 +71,7 @@ def _task(
     due_date: date | None = None,
     status: TaskStatus = TaskStatus.TODO,
 ) -> Task:
-    """Create a task fixture with sortable fields."""
+    """並び替え可能なフィールドを持つタスクフィクスチャを作成する。"""
 
     return Task(
         id=number,
@@ -84,7 +84,7 @@ def _task(
 
 
 def _write_config(directory: Path) -> Path:
-    """Write a temporary ss4d config file for tests."""
+    """テスト用の一時 ss4d 設定ファイルを書き込む。"""
 
     config_path = directory / ".ss4d.toml"
     config_path.write_text(
