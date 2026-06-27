@@ -27,7 +27,7 @@ def create_task(
         document_manager = create_confluence_document_manager(config)
 
     sprint = document_manager.read_sprint()
-    tasks = sprint.tasks.copy()
+    tasks = list(sprint.tasks)
     tasks.insert(
         0,
         Task(
@@ -39,7 +39,9 @@ def create_task(
             body="",
         ),
     )
-    document_manager.write_sprint(with_calculated_points(replace(sprint, tasks=tasks)))
+    document_manager.write_sprint(
+        with_calculated_points(replace(sprint, tasks=tuple(tasks)))
+    )
 
     increment_number(config_path)
     return task_number

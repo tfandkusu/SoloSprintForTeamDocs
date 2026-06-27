@@ -30,7 +30,7 @@ def parse_storage_sprint(body: str) -> Sprint:
         start_day=date.today(),
         done_point=calculate_done_point(tasks),
         all_point=calculate_all_point(tasks),
-        tasks=tasks,
+        tasks=tuple(tasks),
     )
 
 
@@ -111,7 +111,7 @@ def _parse_sprint_info(body: str, tasks: list[Task]) -> Sprint | None:
         start_day=datetime.strptime(raw_start_day, "%Y/%m/%d").date(),
         done_point=_get_int(parsed.get("done_point"), calculate_done_point(tasks)),
         all_point=_get_int(parsed.get("all_point"), calculate_all_point(tasks)),
-        tasks=tasks,
+        tasks=tuple(tasks),
     )
 
 

@@ -19,7 +19,7 @@ class FakeDocumentManager:
             start_day=date(2026, 6, 14),
             done_point=99,
             all_point=99,
-            tasks=[_task(7), _task(8, due_date=date(2026, 7, 1))],
+            tasks=(_task(7), _task(8, due_date=date(2026, 7, 1))),
         )
         self.write_count = 0
 
@@ -48,7 +48,7 @@ class UpdateTaskDueDateTest(TestCase):
 
         with TemporaryDirectory() as directory:
             manager = FakeDocumentManager()
-            original_tasks = manager.sprint.tasks.copy()
+            original_tasks = manager.sprint.tasks
             due_date = update_task_due_date(
                 7,
                 "2026-06-30",

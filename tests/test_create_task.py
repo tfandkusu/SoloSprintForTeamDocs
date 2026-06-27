@@ -18,7 +18,7 @@ class FakeDocumentManager:
             start_day=date(2026, 6, 14),
             done_point=99,
             all_point=99,
-            tasks=[
+            tasks=(
                 Task(
                     id=2,
                     title="Existing",
@@ -26,8 +26,8 @@ class FakeDocumentManager:
                     due_date=None,
                     status=TaskStatus.PROGRESS,
                     body="<p>Existing body</p>",
-                )
-            ],
+                ),
+            ),
         )
 
     def read_sprint(self) -> Sprint:
@@ -64,7 +64,7 @@ class CreateTaskTest(TestCase):
                     start_day=date(2026, 6, 14),
                     done_point=0,
                     all_point=4,
-                    tasks=[
+                    tasks=(
                         Task(
                             id=1,
                             title="CI setup",
@@ -81,7 +81,7 @@ class CreateTaskTest(TestCase):
                             status=TaskStatus.PROGRESS,
                             body="<p>Existing body</p>",
                         ),
-                    ],
+                    ),
                 ),
             )
             self.assertIn("number = 2", config_path.read_text(encoding="utf-8"))

@@ -19,7 +19,7 @@ class FakeDocumentManager:
             start_day=date(2026, 6, 14),
             done_point=99,
             all_point=99,
-            tasks=[_task(7), _task(8, status=TaskStatus.PROGRESS)],
+            tasks=(_task(7), _task(8, status=TaskStatus.PROGRESS)),
         )
         self.write_count = 0
 
@@ -43,7 +43,7 @@ class UpdateTaskStatusTest(TestCase):
 
         with TemporaryDirectory() as directory:
             manager = FakeDocumentManager()
-            original_tasks = manager.sprint.tasks.copy()
+            original_tasks = manager.sprint.tasks
             updated_status = update_task_status(
                 7,
                 "done",

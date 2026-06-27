@@ -1,5 +1,6 @@
 """Confluence HTML フラグメントビルダー。"""
 
+from collections.abc import Iterable
 from html import escape
 
 from ss4d.model.sprint import Sprint
@@ -25,7 +26,7 @@ def format_storage_sprint(sprint: Sprint) -> str:
     )
 
 
-def format_storage_tasks(tasks: list[Task]) -> str:
+def format_storage_tasks(tasks: Iterable[Task]) -> str:
     """タスクを Confluence storage 形式の本文へシリアライズする。"""
 
     return "".join(f"{_format_task(task)}{task.body}" for task in tasks)

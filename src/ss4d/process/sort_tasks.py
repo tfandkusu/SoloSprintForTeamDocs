@@ -24,11 +24,13 @@ def sort_tasks(
         document_manager = create_confluence_document_manager(config)
 
     sprint = document_manager.read_sprint()
-    tasks = sprint.tasks.copy()
+    tasks = list(sprint.tasks)
     tasks.sort(
         key=lambda task: (
             task.status == TaskStatus.DONE,
             task.due_date or date.max,
         )
     )
-    document_manager.write_sprint(with_calculated_points(replace(sprint, tasks=tasks)))
+    document_manager.write_sprint(
+        with_calculated_points(replace(sprint, tasks=tuple(tasks)))
+    )

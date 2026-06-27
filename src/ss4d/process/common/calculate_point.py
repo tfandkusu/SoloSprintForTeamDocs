@@ -1,17 +1,19 @@
 """スプリントのポイント計算処理。"""
 
+from collections.abc import Iterable
+
 from ss4d.model.sprint import Sprint
 from ss4d.model.task import Task
 from ss4d.model.task_status import TaskStatus
 
 
-def calculate_done_point(tasks: list[Task]) -> int:
+def calculate_done_point(tasks: Iterable[Task]) -> int:
     """完了済みタスクの合計ポイントを計算する。"""
 
     return sum(task.points for task in tasks if task.status == TaskStatus.DONE)
 
 
-def calculate_all_point(tasks: list[Task]) -> int:
+def calculate_all_point(tasks: Iterable[Task]) -> int:
     """すべてのタスクの合計ポイントを計算する。"""
 
     return sum(task.points for task in tasks)

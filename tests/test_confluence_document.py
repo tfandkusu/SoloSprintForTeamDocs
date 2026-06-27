@@ -85,7 +85,7 @@ class ConfluenceDocumentManagerTest(TestCase):
                 start_day=date.today(),
                 done_point=0,
                 all_point=3,
-                tasks=[
+                tasks=(
                     Task(
                         id=2,
                         title="Deploy & verify",
@@ -93,8 +93,8 @@ class ConfluenceDocumentManagerTest(TestCase):
                         due_date=date(2026, 6, 30),
                         status=TaskStatus.PROGRESS,
                         body="<p>Keep this body</p>",
-                    )
-                ],
+                    ),
+                ),
             ),
         )
         self.assertEqual(client.page_id, "123")
@@ -111,7 +111,7 @@ class ConfluenceDocumentManagerTest(TestCase):
                 start_day=date(2026, 6, 14),
                 done_point=99,
                 all_point=99,
-                tasks=[
+                tasks=(
                     Task(
                         id=1,
                         title="CI & deploy",
@@ -119,8 +119,8 @@ class ConfluenceDocumentManagerTest(TestCase):
                         due_date=None,
                         status=TaskStatus.REVIEW,
                         body="<p>Task body</p>",
-                    )
-                ],
+                    ),
+                ),
             )
         )
 
@@ -167,7 +167,7 @@ class ConfluenceDocumentManagerTest(TestCase):
             start_day=date(2026, 6, 14),
             done_point=0,
             all_point=0,
-            tasks=[
+            tasks=(
                 Task(
                     id=7,
                     title="Finished",
@@ -184,7 +184,7 @@ class ConfluenceDocumentManagerTest(TestCase):
                     status=TaskStatus.TODO,
                     body="",
                 ),
-            ],
+            ),
         )
 
         self.assertEqual(
@@ -229,7 +229,7 @@ class ConfluenceDocumentManagerTest(TestCase):
                 start_day=date(2026, 6, 14),
                 done_point=1,
                 all_point=2,
-                tasks=[
+                tasks=(
                     Task(
                         id=2,
                         title="Deploy",
@@ -237,8 +237,8 @@ class ConfluenceDocumentManagerTest(TestCase):
                         due_date=None,
                         status=TaskStatus.DONE,
                         body="",
-                    )
-                ],
+                    ),
+                ),
             ),
         )
 

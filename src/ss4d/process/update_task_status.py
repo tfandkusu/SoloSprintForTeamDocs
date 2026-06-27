@@ -26,7 +26,7 @@ def update_task_status(
         document_manager = create_confluence_document_manager(config)
 
     sprint = document_manager.read_sprint()
-    tasks = sprint.tasks.copy()
+    tasks = list(sprint.tasks)
     for index, task in enumerate(tasks):
         if task.id == number:
             tasks[index] = replace(
@@ -34,7 +34,7 @@ def update_task_status(
                 status=TaskStatus(normalized_status.lower()),
             )
             document_manager.write_sprint(
-                with_calculated_points(replace(sprint, tasks=tasks))
+                with_calculated_points(replace(sprint, tasks=tuple(tasks)))
             )
             return normalized_status
 

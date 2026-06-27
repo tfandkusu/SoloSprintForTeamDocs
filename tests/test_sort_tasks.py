@@ -17,7 +17,7 @@ class FakeDocumentManager:
             start_day=date(2026, 6, 14),
             done_point=99,
             all_point=99,
-            tasks=tasks,
+            tasks=tuple(tasks),
         )
         self.should_fail = should_fail
         self.write_count = 0
