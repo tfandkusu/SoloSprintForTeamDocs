@@ -2,9 +2,10 @@
 
 from html import escape
 
-from ss4d.model.sprint import Sprint, with_calculated_points
+from ss4d.model.sprint import Sprint
 from ss4d.model.task import Task
 from ss4d.model.task_status import normalize_task_status
+from ss4d.process.common.calculate_point import with_calculated_points
 
 STATUS_COLOURS = {
     "TODO": "Grey",

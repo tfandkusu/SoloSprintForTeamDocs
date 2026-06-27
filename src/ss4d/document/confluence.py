@@ -9,7 +9,6 @@ from ss4d.config import Config
 from ss4d.document.confluence_html_builder import format_storage_sprint
 from ss4d.document.confluence_html_parser import parse_storage_sprint
 from ss4d.model.sprint import Sprint
-from ss4d.model.task import Task
 
 
 class ConfluenceClient(Protocol):
@@ -38,24 +37,6 @@ class ConfluenceDocumentManager:
 
     client: ConfluenceClient
     page_id: str
-
-    def read_tasks(self) -> list[Task]:
-        """設定された Confluence ページからすべてのタスクを読み込む。"""
-
-        return self.read_sprint().tasks
-
-    def write_tasks(self, tasks: list[Task]) -> None:
-        """指定されたタスクで設定済みの Confluence ページを上書きする。"""
-
-        sprint = self.read_sprint()
-        self.write_sprint(
-            Sprint(
-                start_day=sprint.start_day,
-                done_point=sprint.done_point,
-                all_point=sprint.all_point,
-                tasks=tasks,
-            )
-        )
 
     def read_sprint(self) -> Sprint:
         """設定された Confluence ページからスプリント情報を読み込む。"""

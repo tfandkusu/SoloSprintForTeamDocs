@@ -10,6 +10,7 @@ from typing import cast
 from ss4d.config import CONFIG_PATH, load_config
 from ss4d.document.confluence import create_confluence_document_manager
 from ss4d.document.manager import DocumentManager
+from ss4d.process.common.calculate_point import with_calculated_points
 
 DateParserParse = Callable[..., datetime | None]
 
@@ -29,11 +30,14 @@ def update_task_due_date(
     if document_manager is None:
         document_manager = create_confluence_document_manager(config)
 
-    tasks = document_manager.read_tasks()
+    sprint = document_manager.read_sprint()
+    tasks = sprint.tasks.copy()
     for index, task in enumerate(tasks):
         if task.id == number:
             tasks[index] = replace(task, due_date=date.fromisoformat(due_date))
-            document_manager.write_tasks(tasks)
+            document_manager.write_sprint(
+                with_calculated_points(replace(sprint, tasks=tasks))
+            )
             return due_date
 
     raise RuntimeError(f"Task #{number} was not found.")

@@ -1,5 +1,6 @@
 """タスク作成処理。"""
 
+from dataclasses import replace
 from datetime import date
 from pathlib import Path
 
@@ -8,6 +9,7 @@ from ss4d.document.confluence import create_confluence_document_manager
 from ss4d.document.manager import DocumentManager
 from ss4d.model.task import Task
 from ss4d.model.task_status import TaskStatus
+from ss4d.process.common.calculate_point import with_calculated_points
 
 
 def create_task(
@@ -24,7 +26,8 @@ def create_task(
     if document_manager is None:
         document_manager = create_confluence_document_manager(config)
 
-    tasks = document_manager.read_tasks()
+    sprint = document_manager.read_sprint()
+    tasks = sprint.tasks.copy()
     tasks.insert(
         0,
         Task(
@@ -36,7 +39,7 @@ def create_task(
             body="",
         ),
     )
-    document_manager.write_tasks(tasks)
+    document_manager.write_sprint(with_calculated_points(replace(sprint, tasks=tasks)))
 
     increment_number(config_path)
     return task_number

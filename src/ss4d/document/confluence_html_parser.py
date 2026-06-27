@@ -9,9 +9,13 @@ import tomlkit
 from bs4 import BeautifulSoup
 from bs4.element import PageElement, Tag
 
-from ss4d.model.sprint import Sprint, calculate_all_point, calculate_done_point
+from ss4d.model.sprint import Sprint
 from ss4d.model.task import Task
 from ss4d.model.task_status import TaskStatus
+from ss4d.process.common.calculate_point import (
+    calculate_all_point,
+    calculate_done_point,
+)
 
 
 def parse_storage_sprint(body: str) -> Sprint:

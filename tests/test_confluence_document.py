@@ -58,8 +58,8 @@ class FakeConfluenceClient:
 
 
 class ConfluenceDocumentManagerTest(TestCase):
-    def test_read_tasks_converts_document_to_domain_models(self) -> None:
-        """自由形式の HTML 本文を含むすべてのドキュメントタスクを読み込む。"""
+    def test_read_sprint_converts_document_to_domain_model(self) -> None:
+        """自由形式の HTML 本文を含むスプリント情報を読み込む。"""
 
         client = FakeConfluenceClient(
             page={
@@ -80,38 +80,48 @@ class ConfluenceDocumentManagerTest(TestCase):
         manager = ConfluenceDocumentManager(client=client, page_id="123")
 
         self.assertEqual(
-            manager.read_tasks(),
-            [
-                Task(
-                    id=2,
-                    title="Deploy & verify",
-                    points=3,
-                    due_date=date(2026, 6, 30),
-                    status=TaskStatus.PROGRESS,
-                    body="<p>Keep this body</p>",
-                )
-            ],
+            manager.read_sprint(),
+            Sprint(
+                start_day=date.today(),
+                done_point=0,
+                all_point=3,
+                tasks=[
+                    Task(
+                        id=2,
+                        title="Deploy & verify",
+                        points=3,
+                        due_date=date(2026, 6, 30),
+                        status=TaskStatus.PROGRESS,
+                        body="<p>Keep this body</p>",
+                    )
+                ],
+            ),
         )
         self.assertEqual(client.page_id, "123")
         self.assertEqual(client.expand, "body.storage,version")
 
-    def test_write_tasks_replaces_document_from_domain_models(self) -> None:
-        """指定されたタスクモデルを使ってドキュメント全体を置き換える。"""
+    def test_write_sprint_replaces_document_from_domain_model(self) -> None:
+        """指定されたスプリントモデルを使ってドキュメント全体を置き換える。"""
 
         client = FakeConfluenceClient()
         manager = ConfluenceDocumentManager(client=client, page_id="123")
 
-        manager.write_tasks(
-            [
-                Task(
-                    id=1,
-                    title="CI & deploy",
-                    points=2,
-                    due_date=None,
-                    status=TaskStatus.REVIEW,
-                    body="<p>Task body</p>",
-                )
-            ]
+        manager.write_sprint(
+            Sprint(
+                start_day=date(2026, 6, 14),
+                done_point=99,
+                all_point=99,
+                tasks=[
+                    Task(
+                        id=1,
+                        title="CI & deploy",
+                        points=2,
+                        due_date=None,
+                        status=TaskStatus.REVIEW,
+                        body="<p>Task body</p>",
+                    )
+                ],
+            )
         )
 
         self.assertEqual(client.updated_title, "Sprint page")
@@ -120,7 +130,7 @@ class ConfluenceDocumentManagerTest(TestCase):
             '<ac:structured-macro ac:name="code" ac:schema-version="1">'
             '<ac:parameter ac:name="language">toml</ac:parameter>'
             "<ac:plain-text-body><![CDATA["
-            f'start_day = "{date.today().strftime("%Y/%m/%d")}"\n'
+            'start_day = "2026/06/14"\n'
             "done_point = 0\n"
             "all_point = 2\n"
             "]]></ac:plain-text-body>"
@@ -232,7 +242,7 @@ class ConfluenceDocumentManagerTest(TestCase):
             ),
         )
 
-    def test_read_tasks_defaults_unknown_status_to_todo(self) -> None:
+    def test_read_sprint_defaults_unknown_status_to_todo(self) -> None:
         """サポート外のドキュメントステータス名を todo タスクとして扱う。"""
 
         client = FakeConfluenceClient(
@@ -249,7 +259,7 @@ class ConfluenceDocumentManagerTest(TestCase):
         )
         manager = ConfluenceDocumentManager(client=client, page_id="123")
 
-        self.assertEqual(manager.read_tasks()[0].status, TaskStatus.TODO)
+        self.assertEqual(manager.read_sprint().tasks[0].status, TaskStatus.TODO)
 
 
 def _status_macro(status: str) -> str:

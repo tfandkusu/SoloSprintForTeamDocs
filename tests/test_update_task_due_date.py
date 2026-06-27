@@ -4,6 +4,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 
+from ss4d.model.sprint import Sprint
 from ss4d.model.task import Task
 from ss4d.model.task_status import TaskStatus
 from ss4d.process.update_task_due_date import parse_deadline, update_task_due_date
@@ -14,20 +15,25 @@ class FakeDocumentManager:
         """update-task-due-date テスト用の偽ドキュメントマネージャーを作成する。"""
 
         self.should_fail = should_fail
-        self.tasks = [_task(7), _task(8, due_date=date(2026, 7, 1))]
+        self.sprint = Sprint(
+            start_day=date(2026, 6, 14),
+            done_point=99,
+            all_point=99,
+            tasks=[_task(7), _task(8, due_date=date(2026, 7, 1))],
+        )
         self.write_count = 0
 
-    def read_tasks(self) -> list[Task]:
-        """設定されたタスクのコピーを返す。"""
+    def read_sprint(self) -> Sprint:
+        """設定されたスプリントを返す。"""
 
-        return self.tasks.copy()
+        return self.sprint
 
-    def write_tasks(self, tasks: list[Task]) -> None:
-        """置換後のタスクを記録するか、設定された失敗を送出する。"""
+    def write_sprint(self, sprint: Sprint) -> None:
+        """置換後のスプリントを記録するか、設定された失敗を送出する。"""
 
         if self.should_fail:
             raise RuntimeError("Document update failed")
-        self.tasks = tasks
+        self.sprint = sprint
         self.write_count += 1
 
 
@@ -42,7 +48,7 @@ class UpdateTaskDueDateTest(TestCase):
 
         with TemporaryDirectory() as directory:
             manager = FakeDocumentManager()
-            original_tasks = manager.tasks.copy()
+            original_tasks = manager.sprint.tasks.copy()
             due_date = update_task_due_date(
                 7,
                 "2026-06-30",
@@ -51,12 +57,15 @@ class UpdateTaskDueDateTest(TestCase):
             )
 
         self.assertEqual(due_date, "2026-06-30")
-        self.assertEqual(manager.tasks[0].due_date, date(2026, 6, 30))
+        self.assertEqual(manager.sprint.tasks[0].due_date, date(2026, 6, 30))
         self.assertEqual(
-            manager.tasks[0],
+            manager.sprint.tasks[0],
             replace(original_tasks[0], due_date=date(2026, 6, 30)),
         )
-        self.assertEqual(manager.tasks[1], original_tasks[1])
+        self.assertEqual(manager.sprint.tasks[1], original_tasks[1])
+        self.assertEqual(manager.sprint.start_day, date(2026, 6, 14))
+        self.assertEqual(manager.sprint.done_point, 0)
+        self.assertEqual(manager.sprint.all_point, 6)
         self.assertEqual(manager.write_count, 1)
 
     def test_unknown_deadline_does_not_update_document(self) -> None:

@@ -3,6 +3,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 
+from ss4d.model.sprint import Sprint
 from ss4d.model.task import Task
 from ss4d.model.task_status import TaskStatus
 from ss4d.process.sort_tasks import sort_tasks
@@ -12,21 +13,26 @@ class FakeDocumentManager:
     def __init__(self, tasks: list[Task], *, should_fail: bool = False) -> None:
         """sort-task テスト用の偽ドキュメントマネージャーを作成する。"""
 
-        self.tasks = tasks
+        self.sprint = Sprint(
+            start_day=date(2026, 6, 14),
+            done_point=99,
+            all_point=99,
+            tasks=tasks,
+        )
         self.should_fail = should_fail
         self.write_count = 0
 
-    def read_tasks(self) -> list[Task]:
-        """設定されたタスクのコピーを返す。"""
+    def read_sprint(self) -> Sprint:
+        """設定されたスプリントを返す。"""
 
-        return self.tasks.copy()
+        return self.sprint
 
-    def write_tasks(self, tasks: list[Task]) -> None:
-        """置換後のタスクを記録するか、設定された失敗を送出する。"""
+    def write_sprint(self, sprint: Sprint) -> None:
+        """置換後のスプリントを記録するか、設定された失敗を送出する。"""
 
         if self.should_fail:
             raise RuntimeError("Document update failed")
-        self.tasks = tasks
+        self.sprint = sprint
         self.write_count += 1
 
 
@@ -49,7 +55,10 @@ class SortTasksTest(TestCase):
                 document_manager=manager,
             )
 
-        self.assertEqual([task.id for task in manager.tasks], [3, 4, 1, 2, 5])
+        self.assertEqual([task.id for task in manager.sprint.tasks], [3, 4, 1, 2, 5])
+        self.assertEqual(manager.sprint.start_day, date(2026, 6, 14))
+        self.assertEqual(manager.sprint.done_point, 5)
+        self.assertEqual(manager.sprint.all_point, 15)
         self.assertEqual(manager.write_count, 1)
 
     def test_failed_document_update_raises_error(self) -> None:
