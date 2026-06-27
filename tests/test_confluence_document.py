@@ -3,8 +3,15 @@ from typing import Any
 from unittest import TestCase
 
 from ss4d.document.confluence import ConfluenceDocumentManager
-from ss4d.document.confluence_html_builder import format_storage_tasks
-from ss4d.document.confluence_html_parser import parse_storage_tasks
+from ss4d.document.confluence_html_builder import (
+    format_storage_sprint,
+    format_storage_tasks,
+)
+from ss4d.document.confluence_html_parser import (
+    parse_storage_sprint,
+    parse_storage_tasks,
+)
+from ss4d.model.sprint import Sprint
 from ss4d.model.task import Task
 from ss4d.model.task_status import TaskStatus
 
@@ -110,6 +117,14 @@ class ConfluenceDocumentManagerTest(TestCase):
         self.assertEqual(client.updated_title, "Sprint page")
         self.assertEqual(
             client.updated_body,
+            '<ac:structured-macro ac:name="code" ac:schema-version="1">'
+            '<ac:parameter ac:name="language">toml</ac:parameter>'
+            "<ac:plain-text-body><![CDATA["
+            f'start_day = "{date.today().strftime("%Y/%m/%d")}"\n'
+            "done_point = 0\n"
+            "all_point = 2\n"
+            "]]></ac:plain-text-body>"
+            "</ac:structured-macro>"
             "<h1>#1[2]CI &amp; deploy "
             '<ac:structured-macro ac:name="status" ac:schema-version="1">'
             '<ac:parameter ac:name="colour">Red</ac:parameter>'
@@ -134,6 +149,88 @@ class ConfluenceDocumentManagerTest(TestCase):
         ]
 
         self.assertEqual(parse_storage_tasks(format_storage_tasks(tasks)), tasks)
+
+    def test_storage_sprint_round_trip_and_recalculates_points(self) -> None:
+        """スプリント情報とタスク一覧を Confluence storage HTML 経由で往復させる。"""
+
+        sprint = Sprint(
+            start_day=date(2026, 6, 14),
+            done_point=0,
+            all_point=0,
+            tasks=[
+                Task(
+                    id=7,
+                    title="Finished",
+                    points=5,
+                    due_date=date(2026, 7, 1),
+                    status=TaskStatus.DONE,
+                    body="<p><strong>Finished</strong></p>",
+                ),
+                Task(
+                    id=8,
+                    title="Remaining",
+                    points=4,
+                    due_date=None,
+                    status=TaskStatus.TODO,
+                    body="",
+                ),
+            ],
+        )
+
+        self.assertEqual(
+            parse_storage_sprint(format_storage_sprint(sprint)),
+            Sprint(
+                start_day=date(2026, 6, 14),
+                done_point=5,
+                all_point=9,
+                tasks=sprint.tasks,
+            ),
+        )
+
+    def test_read_sprint_converts_leading_toml_to_domain_model(self) -> None:
+        """先頭 TOML コードブロックからスプリント情報を読み込む。"""
+
+        client = FakeConfluenceClient(
+            page={
+                "title": "Sprint page",
+                "body": {
+                    "storage": {
+                        "value": (
+                            '<ac:structured-macro ac:name="code" '
+                            'ac:schema-version="1">'
+                            '<ac:parameter ac:name="language">toml</ac:parameter>'
+                            "<ac:plain-text-body><![CDATA["
+                            'start_day = "2026/06/14"\n'
+                            "done_point = 1\n"
+                            "all_point = 2\n"
+                            "]]></ac:plain-text-body>"
+                            "</ac:structured-macro>"
+                            f"<h1>#2[3]Deploy {_status_macro('DONE')}</h1>"
+                        )
+                    }
+                },
+            }
+        )
+        manager = ConfluenceDocumentManager(client=client, page_id="123")
+
+        self.assertEqual(
+            manager.read_sprint(),
+            Sprint(
+                start_day=date(2026, 6, 14),
+                done_point=1,
+                all_point=2,
+                tasks=[
+                    Task(
+                        id=2,
+                        title="Deploy",
+                        points=3,
+                        due_date=None,
+                        status=TaskStatus.DONE,
+                        body="",
+                    )
+                ],
+            ),
+        )
 
     def test_read_tasks_defaults_unknown_status_to_todo(self) -> None:
         """サポート外のドキュメントステータス名を todo タスクとして扱う。"""

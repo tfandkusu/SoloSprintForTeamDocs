@@ -6,8 +6,9 @@ from importlib import import_module
 from typing import Protocol, cast
 
 from ss4d.config import Config
-from ss4d.document.confluence_html_builder import format_storage_tasks
-from ss4d.document.confluence_html_parser import parse_storage_tasks
+from ss4d.document.confluence_html_builder import format_storage_sprint
+from ss4d.document.confluence_html_parser import parse_storage_sprint
+from ss4d.model.sprint import Sprint
 from ss4d.model.task import Task
 
 
@@ -41,14 +42,32 @@ class ConfluenceDocumentManager:
     def read_tasks(self) -> list[Task]:
         """設定された Confluence ページからすべてのタスクを読み込む。"""
 
+        return self.read_sprint().tasks
+
+    def write_tasks(self, tasks: list[Task]) -> None:
+        """指定されたタスクで設定済みの Confluence ページを上書きする。"""
+
+        sprint = self.read_sprint()
+        self.write_sprint(
+            Sprint(
+                start_day=sprint.start_day,
+                done_point=sprint.done_point,
+                all_point=sprint.all_point,
+                tasks=tasks,
+            )
+        )
+
+    def read_sprint(self) -> Sprint:
+        """設定された Confluence ページからスプリント情報を読み込む。"""
+
         page = self.client.get_page_by_id(
             self.page_id,
             expand="body.storage,version",
         )
-        return parse_storage_tasks(_extract_storage_body(page))
+        return parse_storage_sprint(_extract_storage_body(page))
 
-    def write_tasks(self, tasks: list[Task]) -> None:
-        """指定されたタスクで設定済みの Confluence ページを上書きする。"""
+    def write_sprint(self, sprint: Sprint) -> None:
+        """指定されたスプリント情報で設定済みの Confluence ページを上書きする。"""
 
         page = self.client.get_page_by_id(
             self.page_id,
@@ -57,7 +76,7 @@ class ConfluenceDocumentManager:
         self.client.update_page(
             self.page_id,
             _extract_page_title(page),
-            format_storage_tasks(tasks),
+            format_storage_sprint(sprint),
             representation="storage",
             minor_edit=False,
         )

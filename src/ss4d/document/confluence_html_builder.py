@@ -2,6 +2,7 @@
 
 from html import escape
 
+from ss4d.model.sprint import Sprint, with_calculated_points
 from ss4d.model.task import Task
 from ss4d.model.task_status import normalize_task_status
 
@@ -13,10 +14,36 @@ STATUS_COLOURS = {
 }
 
 
+def format_storage_sprint(sprint: Sprint) -> str:
+    """スプリントを Confluence storage 形式の本文へシリアライズする。"""
+
+    calculated_sprint = with_calculated_points(sprint)
+    return (
+        f"{_format_sprint_info(calculated_sprint)}"
+        f"{format_storage_tasks(calculated_sprint.tasks)}"
+    )
+
+
 def format_storage_tasks(tasks: list[Task]) -> str:
     """タスクを Confluence storage 形式の本文へシリアライズする。"""
 
     return "".join(f"{_format_task(task)}{task.body}" for task in tasks)
+
+
+def _format_sprint_info(sprint: Sprint) -> str:
+    """スプリント情報を TOML の Confluence code macro として整形する。"""
+
+    raw_toml = (
+        f'start_day = "{sprint.start_day.strftime("%Y/%m/%d")}"\n'
+        f"done_point = {sprint.done_point}\n"
+        f"all_point = {sprint.all_point}\n"
+    )
+    return (
+        '<ac:structured-macro ac:name="code" ac:schema-version="1">'
+        '<ac:parameter ac:name="language">toml</ac:parameter>'
+        f"<ac:plain-text-body><![CDATA[{raw_toml}]]></ac:plain-text-body>"
+        "</ac:structured-macro>"
+    )
 
 
 def _format_task(task: Task) -> str:
