@@ -94,3 +94,33 @@ class MainTest(TestCase):
             result.stderr,
             "Failed to update task due date: Could not parse deadline: someday\n",
         )
+
+    def test_point_outputs_updated_task_point(self) -> None:
+        """成功時にポイント更新完了メッセージを出力する。"""
+
+        runner = CliRunner()
+
+        with patch("ss4d.main.update_task_point", return_value=8) as update_task_point:
+            result = runner.invoke(app, ["point", "7", "8"])
+
+        update_task_point.assert_called_once_with(7, 8)
+        self.assertEqual(result.exit_code, 0)
+        self.assertEqual(result.output, "Updated task #7 point to 8\n")
+
+    def test_point_outputs_error_when_update_fails(self) -> None:
+        """処理失敗時にポイント更新エラーを出力する。"""
+
+        runner = CliRunner()
+
+        with patch(
+            "ss4d.main.update_task_point",
+            side_effect=ValueError("Point must be one of: 1, 2, 3, 5, 8, 13, 21."),
+        ):
+            result = runner.invoke(app, ["point", "7", "4"])
+
+        self.assertEqual(result.exit_code, 1)
+        self.assertEqual(
+            result.stderr,
+            "Failed to update task point: "
+            "Point must be one of: 1, 2, 3, 5, 8, 13, 21.\n",
+        )
