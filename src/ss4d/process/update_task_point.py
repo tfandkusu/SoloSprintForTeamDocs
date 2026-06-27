@@ -43,5 +43,7 @@ def validate_point(point: int) -> None:
     """タスクポイントが許可されたフィボナッチ数か検証する。"""
 
     if point not in ALLOWED_POINTS:
-        allowed_points = ", ".join(str(allowed_point) for allowed_point in ALLOWED_POINTS)
+        allowed_points = ", ".join(
+            str(allowed_point) for allowed_point in ALLOWED_POINTS
+        )
         raise ValueError(f"Point must be one of: {allowed_points}.")
