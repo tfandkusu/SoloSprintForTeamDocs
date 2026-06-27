@@ -3,6 +3,8 @@
 from collections.abc import Iterable
 from html import escape
 
+import tomlkit
+
 from ss4d.model.sprint import Sprint
 from ss4d.model.task import Task
 from ss4d.model.task_status import normalize_task_status
@@ -35,11 +37,11 @@ def format_storage_tasks(tasks: Iterable[Task]) -> str:
 def _format_sprint_info(sprint: Sprint) -> str:
     """スプリント情報を TOML の Confluence code macro として整形する。"""
 
-    raw_toml = (
-        f'start_day = "{sprint.start_day.strftime("%Y/%m/%d")}"\n'
-        f"done_point = {sprint.done_point}\n"
-        f"all_point = {sprint.all_point}\n"
-    )
+    toml_document = tomlkit.document()
+    toml_document.add("start_day", sprint.start_day.strftime("%Y/%m/%d"))
+    toml_document.add("done_point", sprint.done_point)
+    toml_document.add("all_point", sprint.all_point)
+    raw_toml = tomlkit.dumps(toml_document)
     return (
         '<ac:structured-macro ac:name="code" ac:schema-version="1">'
         '<ac:parameter ac:name="language">toml</ac:parameter>'

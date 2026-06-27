@@ -26,6 +26,7 @@ def parse_storage_sprint(body: str) -> Sprint:
     if sprint is not None:
         return sprint
 
+    # TOML code snippet がない既存ドキュメントを初回更新できるようにする fallback。
     return Sprint(
         start_day=date.today(),
         done_point=calculate_done_point(tasks),
