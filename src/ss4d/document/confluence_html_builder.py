@@ -1,9 +1,14 @@
 """Confluence HTML フラグメントビルダー。"""
 
+from collections.abc import Iterable
 from html import escape
 
+import tomlkit
+
+from ss4d.model.sprint import Sprint
 from ss4d.model.task import Task
 from ss4d.model.task_status import normalize_task_status
+from ss4d.process.common.calculate_point import with_calculated_points
 
 STATUS_COLOURS = {
     "TODO": "Grey",
@@ -13,10 +18,37 @@ STATUS_COLOURS = {
 }
 
 
-def format_storage_tasks(tasks: list[Task]) -> str:
+def format_storage_sprint(sprint: Sprint) -> str:
+    """スプリントを Confluence storage 形式の本文へシリアライズする。"""
+
+    calculated_sprint = with_calculated_points(sprint)
+    return (
+        f"{_format_sprint_info(calculated_sprint)}"
+        f"{format_storage_tasks(calculated_sprint.tasks)}"
+    )
+
+
+def format_storage_tasks(tasks: Iterable[Task]) -> str:
     """タスクを Confluence storage 形式の本文へシリアライズする。"""
 
     return "".join(f"{_format_task(task)}{task.body}" for task in tasks)
+
+
+def _format_sprint_info(sprint: Sprint) -> str:
+    """スプリント情報を TOML の Confluence code macro として整形する。"""
+
+    toml_document = tomlkit.document()
+    toml_document.add("start_day", sprint.start_day.strftime("%Y/%m/%d"))
+    toml_document.add("done_point", sprint.done_point)
+    toml_document.add("remaining_point", sprint.remaining_point)
+    toml_document.add("all_point", sprint.all_point)
+    raw_toml = tomlkit.dumps(toml_document)
+    return (
+        '<ac:structured-macro ac:name="code" ac:schema-version="1">'
+        '<ac:parameter ac:name="language">toml</ac:parameter>'
+        f"<ac:plain-text-body><![CDATA[{raw_toml}]]></ac:plain-text-body>"
+        "</ac:structured-macro>"
+    )
 
 
 def _format_task(task: Task) -> str:

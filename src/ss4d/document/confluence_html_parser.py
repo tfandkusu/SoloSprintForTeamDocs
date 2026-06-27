@@ -1,13 +1,40 @@
 """Confluence HTML 本文のパーサーとシリアライザー。"""
 
 import re
-from datetime import date
+from collections.abc import Mapping
+from datetime import date, datetime
+from typing import cast
 
+import tomlkit
 from bs4 import BeautifulSoup
 from bs4.element import PageElement, Tag
 
+from ss4d.model.sprint import Sprint
 from ss4d.model.task import Task
 from ss4d.model.task_status import TaskStatus
+from ss4d.process.common.calculate_point import (
+    calculate_all_point,
+    calculate_done_point,
+    calculate_remaining_point,
+)
+
+
+def parse_storage_sprint(body: str) -> Sprint:
+    """Confluence storage 形式の本文からスプリント情報を解析する。"""
+
+    tasks = parse_storage_tasks(body)
+    sprint = _parse_sprint_info(body, tasks)
+    if sprint is not None:
+        return sprint
+
+    # TOML code snippet がない既存ドキュメントを初回更新できるようにする fallback。
+    return Sprint(
+        start_day=date.today(),
+        done_point=calculate_done_point(tasks),
+        remaining_point=calculate_remaining_point(tasks),
+        all_point=calculate_all_point(tasks),
+        tasks=tuple(tasks),
+    )
 
 
 def parse_storage_tasks(body: str) -> list[Task]:
@@ -71,6 +98,56 @@ def _split_h1_sections(body: str) -> list[str]:
     ]
 
 
+def _parse_sprint_info(body: str, tasks: list[Task]) -> Sprint | None:
+    """先頭 TOML コードブロックからスプリント情報を解析する。"""
+
+    raw_toml = _extract_leading_toml(body)
+    if raw_toml is None:
+        return None
+
+    parsed = cast(Mapping[str, object], tomlkit.parse(raw_toml))
+    raw_start_day = parsed.get("start_day")
+    if not isinstance(raw_start_day, str):
+        return None
+
+    return Sprint(
+        start_day=datetime.strptime(raw_start_day, "%Y/%m/%d").date(),
+        done_point=_get_int(parsed.get("done_point"), calculate_done_point(tasks)),
+        remaining_point=_get_int(
+            parsed.get("remaining_point"),
+            calculate_remaining_point(tasks),
+        ),
+        all_point=_get_int(parsed.get("all_point"), calculate_all_point(tasks)),
+        tasks=tuple(tasks),
+    )
+
+
+def _extract_leading_toml(body: str) -> str | None:
+    """本文先頭の TOML コードブロック本文を抽出する。"""
+
+    soup = BeautifulSoup(body, "html.parser")
+    for element in soup.contents:
+        if _is_blank_text(element):
+            continue
+        if not isinstance(element, Tag) or not _is_code_macro(element):
+            return None
+        language = element.find("ac:parameter", attrs={"ac:name": "language"})
+        if isinstance(language, Tag) and language.get_text(strip=True) != "toml":
+            return None
+        plain_text = element.find("ac:plain-text-body")
+        if not isinstance(plain_text, Tag):
+            return None
+        return plain_text.get_text()
+
+    return None
+
+
+def _get_int(value: object, default: int) -> int:
+    """TOML 値を int として返し、未指定や不正値ならデフォルト値を返す。"""
+
+    return value if isinstance(value, int) else default
+
+
 def _extract_due_date(h1: Tag) -> date | None:
     """h1 タグから最初の有効な期限日を抽出する。"""
 
@@ -115,6 +192,18 @@ def _is_tag(element: PageElement, name: str) -> bool:
     """要素が指定名のタグかどうかを返す。"""
 
     return isinstance(element, Tag) and element.name == name
+
+
+def _is_code_macro(element: Tag) -> bool:
+    """要素が Confluence の code macro かどうかを返す。"""
+
+    return element.name == "ac:structured-macro" and element.get("ac:name") == "code"
+
+
+def _is_blank_text(element: PageElement) -> bool:
+    """要素が空白だけのテキストノードかどうかを返す。"""
+
+    return not isinstance(element, Tag) and str(element).strip() == ""
 
 
 def _serialize(elements: list[PageElement]) -> str:

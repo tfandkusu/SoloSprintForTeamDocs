@@ -7,6 +7,7 @@ from ss4d.config import CONFIG_PATH, load_config
 from ss4d.document.confluence import create_confluence_document_manager
 from ss4d.document.manager import DocumentManager
 from ss4d.model.task_status import TaskStatus, normalize_task_status
+from ss4d.process.common.calculate_point import with_calculated_points
 
 
 def update_task_status(
@@ -24,14 +25,17 @@ def update_task_status(
     if document_manager is None:
         document_manager = create_confluence_document_manager(config)
 
-    tasks = document_manager.read_tasks()
+    sprint = document_manager.read_sprint()
+    tasks = list(sprint.tasks)
     for index, task in enumerate(tasks):
         if task.id == number:
             tasks[index] = replace(
                 task,
                 status=TaskStatus(normalized_status.lower()),
             )
-            document_manager.write_tasks(tasks)
+            document_manager.write_sprint(
+                with_calculated_points(replace(sprint, tasks=tuple(tasks)))
+            )
             return normalized_status
 
     raise RuntimeError(f"Task #{number} was not found.")

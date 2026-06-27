@@ -3,6 +3,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 
+from ss4d.model.sprint import Sprint
 from ss4d.model.task import Task
 from ss4d.model.task_status import TaskStatus
 from ss4d.process.create_task import create_task
@@ -13,28 +14,34 @@ class FakeDocumentManager:
         """create-task テスト用の偽ドキュメントマネージャーを作成する。"""
 
         self.should_fail = should_fail
-        self.tasks = [
-            Task(
-                id=2,
-                title="Existing",
-                points=3,
-                due_date=None,
-                status=TaskStatus.PROGRESS,
-                body="<p>Existing body</p>",
-            )
-        ]
+        self.sprint = Sprint(
+            start_day=date(2026, 6, 14),
+            done_point=99,
+            remaining_point=99,
+            all_point=99,
+            tasks=(
+                Task(
+                    id=2,
+                    title="Existing",
+                    points=3,
+                    due_date=None,
+                    status=TaskStatus.PROGRESS,
+                    body="<p>Existing body</p>",
+                ),
+            ),
+        )
 
-    def read_tasks(self) -> list[Task]:
-        """設定されたタスクを返す。"""
+    def read_sprint(self) -> Sprint:
+        """設定されたスプリントを返す。"""
 
-        return self.tasks.copy()
+        return self.sprint
 
-    def write_tasks(self, tasks: list[Task]) -> None:
-        """置換後のタスクを記録するか、設定された失敗を送出する。"""
+    def write_sprint(self, sprint: Sprint) -> None:
+        """置換後のスプリントを記録するか、設定された失敗を送出する。"""
 
         if self.should_fail:
             raise RuntimeError("Document update failed")
-        self.tasks = tasks
+        self.sprint = sprint
 
 
 class CreateTaskTest(TestCase):
@@ -53,25 +60,31 @@ class CreateTaskTest(TestCase):
 
             self.assertEqual(task_number, 1)
             self.assertEqual(
-                document_manager.tasks,
-                [
-                    Task(
-                        id=1,
-                        title="CI setup",
-                        points=1,
-                        due_date=date.today(),
-                        status=TaskStatus.TODO,
-                        body="",
+                document_manager.sprint,
+                Sprint(
+                    start_day=date(2026, 6, 14),
+                    done_point=0,
+                    remaining_point=4,
+                    all_point=4,
+                    tasks=(
+                        Task(
+                            id=1,
+                            title="CI setup",
+                            points=1,
+                            due_date=date.today(),
+                            status=TaskStatus.TODO,
+                            body="",
+                        ),
+                        Task(
+                            id=2,
+                            title="Existing",
+                            points=3,
+                            due_date=None,
+                            status=TaskStatus.PROGRESS,
+                            body="<p>Existing body</p>",
+                        ),
                     ),
-                    Task(
-                        id=2,
-                        title="Existing",
-                        points=3,
-                        due_date=None,
-                        status=TaskStatus.PROGRESS,
-                        body="<p>Existing body</p>",
-                    ),
-                ],
+                ),
             )
             self.assertIn("number = 2", config_path.read_text(encoding="utf-8"))
 
