@@ -131,8 +131,9 @@ class MainTest(TestCase):
 
         with (
             patch("ss4d.main.list_tasks", return_value=("task",)) as mocked_list_tasks,
-            patch("ss4d.main.format_task_lines", return_value=["line 1", "line 2"])
-            as mocked_format_task_lines,
+            patch(
+                "ss4d.main.format_task_lines", return_value=["line 1", "line 2"]
+            ) as mocked_format_task_lines,
         ):
             result = runner.invoke(app, ["list"], color=True)
 
