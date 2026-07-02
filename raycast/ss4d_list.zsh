@@ -3,7 +3,7 @@
 # 必須パラメーター:
 # @raycast.schemaVersion 1
 # @raycast.title ss4d list
-# @raycast.mode compact
+# @raycast.mode fullOutput
 
 # 任意パラメーター:
 # @raycast.packageName SoloSprintForTeamDocs
@@ -24,4 +24,8 @@ source "${script_dir}/uv.zsh"
 # uv が pyproject.toml を見つけられるようにリポジトリルートから ss4d を実行する。
 cd "${repo_root}"
 
-"${SS4D_UV_BIN}" run ss4d list "$1"
+if [[ -n "$1" ]]; then
+  "${SS4D_UV_BIN}" run ss4d list "$1"
+else
+  "${SS4D_UV_BIN}" run ss4d list
+fi

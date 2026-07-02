@@ -1,13 +1,11 @@
 """ss4d のコマンドラインインターフェース。"""
 
-from datetime import date
 from typing import Annotated
 
 import typer
 
 from ss4d.config import ConfigError
-from ss4d.model.task import Task
-from ss4d.model.task_status import TaskStatus
+from ss4d.format import format_task_lines
 from ss4d.process.create_task import create_task
 from ss4d.process.list_tasks import list_tasks
 from ss4d.process.sort_tasks import sort_tasks
@@ -123,8 +121,8 @@ def list_command(
         typer.echo("No tasks found")
         return
 
-    for task in tasks:
-        typer.echo(_format_task_line(task))
+    for line in format_task_lines(tasks):
+        typer.echo(line)
 
 
 def main() -> None:
@@ -142,31 +140,3 @@ def _parse_list_scope(scope: str) -> bool:
     if normalized_scope == "all":
         return True
     raise ValueError("List scope must be either 'remaining' or 'all'.")
-
-
-def _format_task_line(task: Task) -> str:
-    """タスク 1 件を一覧表示用の 1 行テキストへ整形する。"""
-
-    due_date = _format_due_date(task.due_date)
-    status = _format_status(task.status)
-    return f"#{task.id}[{task.points}] {task.title} {due_date} {status}"
-
-
-def _format_due_date(due_date: date | None) -> str:
-    """一覧表示用の期限日テキストを返す。"""
-
-    if due_date is None:
-        return "-"
-    return due_date.isoformat()
-
-
-def _format_status(status: TaskStatus) -> str:
-    """一覧表示用にステータス名へ Confluence 相当の色を付ける。"""
-
-    status_styles = {
-        TaskStatus.TODO: typer.colors.BRIGHT_BLACK,
-        TaskStatus.PROGRESS: typer.colors.BLUE,
-        TaskStatus.REVIEW: typer.colors.RED,
-        TaskStatus.DONE: typer.colors.GREEN,
-    }
-    return typer.style(status.name, fg=status_styles[status])

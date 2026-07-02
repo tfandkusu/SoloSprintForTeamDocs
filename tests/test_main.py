@@ -1,12 +1,9 @@
 from unittest import TestCase
 from unittest.mock import patch
 
-import typer
 from typer.testing import CliRunner
 
 from ss4d.main import app
-from ss4d.model.task import Task
-from ss4d.model.task_status import TaskStatus
 
 
 class MainTest(TestCase):
@@ -131,26 +128,18 @@ class MainTest(TestCase):
         """成功時に未完了タスク一覧を出力する。"""
 
         runner = CliRunner()
-        tasks = (
-            Task(
-                id=7,
-                title="CI setup",
-                points=3,
-                due_date=None,
-                status=TaskStatus.PROGRESS,
-                body="",
-            ),
-        )
 
-        with patch("ss4d.main.list_tasks", return_value=tasks) as mocked_list_tasks:
+        with (
+            patch("ss4d.main.list_tasks", return_value=("task",)) as mocked_list_tasks,
+            patch("ss4d.main.format_task_lines", return_value=["line 1", "line 2"])
+            as mocked_format_task_lines,
+        ):
             result = runner.invoke(app, ["list"], color=True)
 
         mocked_list_tasks.assert_called_once_with(show_all=False)
+        mocked_format_task_lines.assert_called_once_with(("task",))
         self.assertEqual(result.exit_code, 0)
-        self.assertEqual(
-            result.output,
-            f"#7[3] CI setup - {typer.style('PROGRESS', fg=typer.colors.BLUE)}\n",
-        )
+        self.assertEqual(result.output, "line 1\nline 2\n")
 
     def test_list_outputs_all_tasks_when_requested(self) -> None:
         """all 指定時に全件表示モードで一覧を取得する。"""
