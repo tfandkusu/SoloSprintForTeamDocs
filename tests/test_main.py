@@ -123,3 +123,46 @@ class MainTest(TestCase):
             result.stderr,
             "Failed to update task point: Point must be 1 or greater.\n",
         )
+
+    def test_list_outputs_remaining_tasks_by_default(self) -> None:
+        """成功時に未完了タスク一覧を出力する。"""
+
+        runner = CliRunner()
+
+        with (
+            patch("ss4d.main.list_tasks", return_value=("task",)) as mocked_list_tasks,
+            patch(
+                "ss4d.main.format_task_lines", return_value=["line 1", "line 2"]
+            ) as mocked_format_task_lines,
+        ):
+            result = runner.invoke(app, ["list"], color=True)
+
+        mocked_list_tasks.assert_called_once_with(show_all=False)
+        mocked_format_task_lines.assert_called_once_with(("task",))
+        self.assertEqual(result.exit_code, 0)
+        self.assertEqual(result.output, "line 1\nline 2\n")
+
+    def test_list_outputs_all_tasks_when_requested(self) -> None:
+        """all 指定時に全件表示モードで一覧を取得する。"""
+
+        runner = CliRunner()
+
+        with patch("ss4d.main.list_tasks", return_value=()) as mocked_list_tasks:
+            result = runner.invoke(app, ["list", "all"])
+
+        mocked_list_tasks.assert_called_once_with(show_all=True)
+        self.assertEqual(result.exit_code, 0)
+        self.assertEqual(result.output, "No tasks found\n")
+
+    def test_list_outputs_error_for_unknown_scope(self) -> None:
+        """不正な一覧スコープを指定したときはエラーを出力する。"""
+
+        runner = CliRunner()
+
+        result = runner.invoke(app, ["list", "everything"])
+
+        self.assertEqual(result.exit_code, 1)
+        self.assertEqual(
+            result.stderr,
+            "Failed to list tasks: List scope must be either 'remaining' or 'all'.\n",
+        )
