@@ -1,9 +1,15 @@
 """ss4d のコマンドラインインターフェース。"""
 
+from datetime import date
+from typing import Annotated
+
 import typer
 
 from ss4d.config import ConfigError
+from ss4d.model.task import Task
+from ss4d.model.task_status import TaskStatus
 from ss4d.process.create_task import create_task
+from ss4d.process.list_tasks import list_tasks
 from ss4d.process.sort_tasks import sort_tasks
 from ss4d.process.update_task_due_date import update_task_due_date
 from ss4d.process.update_task_point import update_task_point
@@ -97,7 +103,70 @@ def point(number: int, point: int) -> None:
     typer.echo(f"Updated task #{number} point to {updated_point}")
 
 
+@app.command("list")
+def list_command(
+    scope: Annotated[str, typer.Argument()] = "remaining",
+) -> None:
+    """Confluence のタスク一覧を表示する。"""
+
+    try:
+        show_all = _parse_list_scope(scope)
+        tasks = list_tasks(show_all=show_all)
+    except ConfigError as error:
+        typer.echo(str(error), err=True)
+        raise typer.Exit(code=1) from error
+    except Exception as error:
+        typer.echo(f"Failed to list tasks: {error}", err=True)
+        raise typer.Exit(code=1) from error
+
+    if not tasks:
+        typer.echo("No tasks found")
+        return
+
+    for task in tasks:
+        typer.echo(_format_task_line(task))
+
+
 def main() -> None:
     """Typer アプリケーションを実行する。"""
 
     app()
+
+
+def _parse_list_scope(scope: str) -> bool:
+    """list コマンドの表示対象を解釈して全件表示かどうかを返す。"""
+
+    normalized_scope = scope.lower()
+    if normalized_scope == "remaining":
+        return False
+    if normalized_scope == "all":
+        return True
+    raise ValueError("List scope must be either 'remaining' or 'all'.")
+
+
+def _format_task_line(task: Task) -> str:
+    """タスク 1 件を一覧表示用の 1 行テキストへ整形する。"""
+
+    due_date = _format_due_date(task.due_date)
+    status = _format_status(task.status)
+    return f"#{task.id}[{task.points}] {task.title} {due_date} {status}"
+
+
+def _format_due_date(due_date: date | None) -> str:
+    """一覧表示用の期限日テキストを返す。"""
+
+    if due_date is None:
+        return "-"
+    return due_date.isoformat()
+
+
+def _format_status(status: TaskStatus) -> str:
+    """一覧表示用にステータス名へ Confluence 相当の色を付ける。"""
+
+    status_styles = {
+        TaskStatus.TODO: typer.colors.BRIGHT_BLACK,
+        TaskStatus.PROGRESS: typer.colors.BLUE,
+        TaskStatus.REVIEW: typer.colors.RED,
+        TaskStatus.DONE: typer.colors.GREEN,
+    }
+    return typer.style(status.name, fg=status_styles[status])

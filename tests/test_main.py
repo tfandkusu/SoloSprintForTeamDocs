@@ -1,9 +1,12 @@
 from unittest import TestCase
 from unittest.mock import patch
 
+import typer
 from typer.testing import CliRunner
 
 from ss4d.main import app
+from ss4d.model.task import Task
+from ss4d.model.task_status import TaskStatus
 
 
 class MainTest(TestCase):
@@ -122,4 +125,54 @@ class MainTest(TestCase):
         self.assertEqual(
             result.stderr,
             "Failed to update task point: Point must be 1 or greater.\n",
+        )
+
+    def test_list_outputs_remaining_tasks_by_default(self) -> None:
+        """成功時に未完了タスク一覧を出力する。"""
+
+        runner = CliRunner()
+        tasks = (
+            Task(
+                id=7,
+                title="CI setup",
+                points=3,
+                due_date=None,
+                status=TaskStatus.PROGRESS,
+                body="",
+            ),
+        )
+
+        with patch("ss4d.main.list_tasks", return_value=tasks) as mocked_list_tasks:
+            result = runner.invoke(app, ["list"], color=True)
+
+        mocked_list_tasks.assert_called_once_with(show_all=False)
+        self.assertEqual(result.exit_code, 0)
+        self.assertEqual(
+            result.output,
+            f"#7[3] CI setup - {typer.style('PROGRESS', fg=typer.colors.BLUE)}\n",
+        )
+
+    def test_list_outputs_all_tasks_when_requested(self) -> None:
+        """all 指定時に全件表示モードで一覧を取得する。"""
+
+        runner = CliRunner()
+
+        with patch("ss4d.main.list_tasks", return_value=()) as mocked_list_tasks:
+            result = runner.invoke(app, ["list", "all"])
+
+        mocked_list_tasks.assert_called_once_with(show_all=True)
+        self.assertEqual(result.exit_code, 0)
+        self.assertEqual(result.output, "No tasks found\n")
+
+    def test_list_outputs_error_for_unknown_scope(self) -> None:
+        """不正な一覧スコープを指定したときはエラーを出力する。"""
+
+        runner = CliRunner()
+
+        result = runner.invoke(app, ["list", "everything"])
+
+        self.assertEqual(result.exit_code, 1)
+        self.assertEqual(
+            result.stderr,
+            "Failed to list tasks: List scope must be either 'remaining' or 'all'.\n",
         )
